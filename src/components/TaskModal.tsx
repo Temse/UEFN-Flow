@@ -5,7 +5,7 @@ import { Task, SubTask } from '../types';
 import { cn } from '../lib/utils';
 import { nanoid } from 'nanoid';
 
-interface TaskModalProps {
+interface TaskModalProps { key?: string | number;
   task: Task;
   onClose: () => void;
   onUpdate: (task: Task) => void;
@@ -119,7 +119,7 @@ export default function TaskModal({ task, onClose, onUpdate, onDelete }: TaskMod
               type="text"
               value={task.title}
               onChange={(e) => updateTitle(e.target.value)}
-              className="text-2xl font-bold text-white bg-transparent border-none outline-none focus:ring-1 focus:ring-epic-cyan/30 rounded w-full"
+              className="text-2xl font-bold text-ue-text bg-transparent border-none outline-none focus:ring-1 focus:ring-epic-cyan/30 rounded w-full"
               placeholder="Task Titel"
             />
             <textarea 
@@ -147,7 +147,7 @@ export default function TaskModal({ task, onClose, onUpdate, onDelete }: TaskMod
             )}
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-ue-panel-hover rounded-full transition-colors text-ue-text-muted hover:text-white"
+              className="p-2 hover:bg-ue-panel-hover rounded-full transition-colors text-ue-text-muted hover:text-ue-text"
             >
               <X size={24} />
             </button>
@@ -204,7 +204,7 @@ export default function TaskModal({ task, onClose, onUpdate, onDelete }: TaskMod
                   value={newSubTaskTitle}
                   onChange={(e) => setNewSubTaskTitle(e.target.value)}
                   placeholder="Neuer Punkt..."
-                  className="flex-1 bg-ue-bg border border-ue-border rounded-lg px-4 py-2 text-sm text-white focus:border-epic-cyan outline-none transition-colors"
+                  className="flex-1 bg-ue-bg border border-ue-border rounded-lg px-4 py-2 text-sm text-ue-text focus:border-epic-cyan outline-none transition-colors"
                 />
                 <button 
                   type="submit"
@@ -240,7 +240,7 @@ export default function TaskModal({ task, onClose, onUpdate, onDelete }: TaskMod
                 type="date"
                 value={task.dueDate || ''}
                 onChange={(e) => updateDueDate(e.target.value)}
-                className="w-full bg-ue-bg border border-ue-border rounded-lg px-3 py-2 text-xs text-white focus:border-epic-cyan outline-none transition-colors"
+                className="w-full bg-ue-bg border border-ue-border rounded-lg px-3 py-2 text-xs text-ue-text focus:border-epic-cyan outline-none transition-colors"
               />
               {task.dueDate && (
                 <button 

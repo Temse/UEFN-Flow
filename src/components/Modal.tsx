@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertTriangle, X } from 'lucide-react';
 
-interface ConfirmModalProps {
+interface ConfirmModalProps { key?: string | number;
   isOpen: boolean;
   title: string;
   message: string;
@@ -38,13 +38,13 @@ export function ConfirmModal({
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${type === 'danger' ? 'bg-red-500/20 text-red-500' : 'bg-epic-cyan/20 text-epic-cyan'}`}>
                   <AlertTriangle size={24} />
                 </div>
-                <h3 className="text-xl font-bold text-white">{title}</h3>
+                <h3 className="text-xl font-bold text-ue-text">{title}</h3>
               </div>
               <p className="text-ue-text-muted mb-8">{message}</p>
               <div className="flex gap-3">
                 <button
                   onClick={onCancel}
-                  className="flex-1 px-4 py-2 bg-ue-bg border border-ue-border rounded-lg text-white font-bold hover:bg-ue-panel-hover transition-colors"
+                  className="flex-1 px-4 py-2 bg-ue-bg border border-ue-border rounded-lg text-ue-text font-bold hover:bg-ue-panel-hover transition-colors"
                 >
                   {cancelText}
                 </button>
@@ -63,7 +63,7 @@ export function ConfirmModal({
   );
 }
 
-interface InputModalProps {
+interface InputModalProps { key?: string | number;
   isOpen: boolean;
   title: string;
   placeholder: string;
@@ -100,8 +100,8 @@ export function InputModal({
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-white">{title}</h3>
-                <button onClick={onCancel} className="text-ue-text-muted hover:text-white transition-colors">
+                <h3 className="text-xl font-bold text-ue-text">{title}</h3>
+                <button onClick={onCancel} className="text-ue-text-muted hover:text-ue-text transition-colors">
                   <X size={20} />
                 </button>
               </div>
@@ -111,7 +111,7 @@ export function InputModal({
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder={placeholder}
-                className="w-full bg-ue-bg border border-ue-border rounded-xl px-4 py-3 text-white mb-8 focus:outline-none focus:border-epic-cyan transition-colors"
+                className="w-full bg-ue-bg border border-ue-border rounded-xl px-4 py-3 text-ue-text mb-8 focus:outline-none focus:border-epic-cyan transition-colors"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && value.trim()) onConfirm(value);
                   if (e.key === 'Escape') onCancel();
@@ -120,7 +120,7 @@ export function InputModal({
               <div className="flex gap-3">
                 <button
                   onClick={onCancel}
-                  className="flex-1 px-4 py-2 bg-ue-bg border border-ue-border rounded-lg text-white font-bold hover:bg-ue-panel-hover transition-colors"
+                  className="flex-1 px-4 py-2 bg-ue-bg border border-ue-border rounded-lg text-ue-text font-bold hover:bg-ue-panel-hover transition-colors"
                 >
                   Abbrechen
                 </button>

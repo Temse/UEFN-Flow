@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/LanguageContext';
 import React from 'react';
 import { ArrowLeft, Settings, MessageSquare, Save, Loader2, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -33,7 +34,7 @@ export default function Header({
   
   const progress = totalSubTasks > 0 ? Math.round((completedSubTasks / totalSubTasks) * 100) : 0;
   
-  const lang = (localStorage.getItem('uefn-lang') as Language) || 'en';
+  const { lang } = useLanguage();
   const t = translations[lang];
 
   return (
@@ -42,7 +43,7 @@ export default function Header({
         {isProjectView && (
           <Link 
             to="/" 
-            className="p-2 text-ue-text-muted hover:text-white hover:bg-ue-bg rounded-lg transition-colors"
+            className="p-2 text-ue-text-muted hover:text-ue-text hover:bg-ue-bg rounded-lg transition-colors"
             title={t.backToDashboard}
           >
             <ArrowLeft size={20} />
@@ -53,7 +54,7 @@ export default function Header({
           className="relative hover:scale-105 active:scale-95 transition-transform cursor-pointer block"
           title={lang === 'en' ? 'Back to Dashboard' : 'Zurück zum Dashboard'}
         >
-          <div className="w-8 h-8 bg-unreal-orange rounded flex items-center justify-center font-bold text-white">
+          <div className="w-8 h-8 bg-unreal-orange rounded flex items-center justify-center font-bold text-ue-text">
             U
           </div>
           {isProjectView && (
@@ -61,7 +62,7 @@ export default function Header({
           )}
         </Link>
         <div className="flex flex-col">
-          <h1 className="text-sm font-bold tracking-tight truncate max-w-[200px] leading-none text-white">{projectName}</h1>
+          <h1 className="text-sm font-bold tracking-tight truncate max-w-[200px] leading-none text-ue-text">{projectName}</h1>
           {isProjectView && <span className="text-[9px] font-bold text-epic-cyan uppercase tracking-widest mt-1">Live Sync</span>}
         </div>
       </div>
@@ -114,7 +115,7 @@ export default function Header({
             className={`flex items-center gap-2 px-4 py-2 bg-ue-bg border rounded-md transition-all cursor-pointer text-xs font-bold uppercase tracking-wider ${
               showNotesActive 
                 ? 'border-unreal-orange text-unreal-orange shadow-[0_0_15px_rgba(241,90,36,0.25)] bg-unreal-orange/10' 
-                : 'border-ue-border hover:border-unreal-orange hover:text-unreal-orange text-white'
+                : 'border-ue-border hover:border-unreal-orange hover:text-unreal-orange text-ue-text'
             }`}
             title={lang === 'en' ? 'Toggle Project Notes' : 'Projektnotizen umschalten'}
           >
@@ -125,7 +126,7 @@ export default function Header({
         {isProjectView && onSettings && (
           <button 
             onClick={onSettings}
-            className="flex items-center gap-2 px-4 py-2 bg-ue-bg border border-ue-border hover:border-epic-cyan hover:text-epic-cyan text-xs font-bold uppercase tracking-wider rounded-md transition-all cursor-pointer text-white"
+            className="flex items-center gap-2 px-4 py-2 bg-ue-bg border border-ue-border hover:border-epic-cyan hover:text-epic-cyan text-xs font-bold uppercase tracking-wider rounded-md transition-all cursor-pointer text-ue-text"
           >
             <Settings size={14} />
             {t.settingsTitle}

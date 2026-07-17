@@ -1,0 +1,1 @@
+sed -i 's/            <button /          <button onClick={onClose} className="p-2 hover:bg-white\/10 rounded-full transition-colors text-ue-text-muted hover:text-ue-text cursor-pointer">/g' src/components/ProjectSettingsModal.tsx

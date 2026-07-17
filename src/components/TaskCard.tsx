@@ -93,7 +93,7 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
         />
       )}
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h4 className="text-sm font-medium leading-tight group-hover:text-white transition-colors">
+        <h4 className="text-sm font-medium leading-tight group-hover:text-ue-text transition-colors">
           {task.title}
         </h4>
         {task.isCritical && (

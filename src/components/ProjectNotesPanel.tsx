@@ -1,3 +1,4 @@
+import { useLanguage } from '../lib/LanguageContext';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { X, Check, Trash2, Plus, Sparkles, Clipboard, CheckCircle, Clock } from 'lucide-react';
@@ -14,10 +15,10 @@ interface ProjectNotesPanelProps {
   project: Project;
   onUpdateNotes: (newNotesStr: string) => void;
   onClose: () => void;
-  lang: string;
+
 }
 
-export default function ProjectNotesPanel({ project, onUpdateNotes, onClose, lang }: ProjectNotesPanelProps) {
+export default function ProjectNotesPanel({ project, onUpdateNotes, onClose }: ProjectNotesPanelProps) {
   // Safe helper to parse complex JSON notes or legacy plain-text
   const parseNotes = (notesStr: string | null | undefined) => {
     if (!notesStr) return { text: '', todos: [] as TodoReminder[] };
@@ -115,6 +116,7 @@ export default function ProjectNotesPanel({ project, onUpdateNotes, onClose, lan
     triggerSave(text, updated);
   };
 
+  const { lang } = useLanguage();
   const t = {
     title: lang === 'en' ? 'Project Notes' : 'Projektnotizen',
     desc: lang === 'en' ? 'Quick snippets and project wiki' : 'Schnelle Snippets und Projekt-Wiki',
@@ -135,11 +137,11 @@ export default function ProjectNotesPanel({ project, onUpdateNotes, onClose, lan
       className="w-96 flex flex-col bg-ue-panel border-l border-ue-border h-full flex-shrink-0 relative z-30 shadow-2xl overflow-hidden"
     >
       {/* Header */}
-      <div className="p-4 border-b border-ue-border flex items-center justify-between bg-ue-bg/30">
+      <div className="p-4 border-b border-ue-border flex items-center justify-between bg-black/5 dark:bg-black/30">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-unreal-orange animate-pulse" />
           <div>
-            <h3 className="font-bold text-sm text-white">{t.title}</h3>
+            <h3 className="font-bold text-sm text-ue-text">{t.title}</h3>
             <p className="text-[10px] text-ue-text-muted font-medium">{t.desc}</p>
           </div>
         </div>
@@ -153,7 +155,7 @@ export default function ProjectNotesPanel({ project, onUpdateNotes, onClose, lan
           </span>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-ue-border text-ue-text-muted hover:text-white rounded transition-colors"
+            className="p-1 hover:bg-ue-border text-ue-text-muted hover:text-ue-text rounded transition-colors"
           >
             <X size={16} />
           </button>
@@ -166,13 +168,13 @@ export default function ProjectNotesPanel({ project, onUpdateNotes, onClose, lan
         <div className="flex-1 flex flex-col min-h-[250px]">
           <div className="flex items-center gap-1.5 mb-2 text-ue-text-muted">
             <Clipboard size={14} className="text-unreal-orange" />
-            <span className="text-xs font-bold uppercase tracking-wider text-white">Project Wiki</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-ue-text">Project Wiki</span>
           </div>
           <textarea
             value={text}
             onChange={handleTextChange}
             placeholder={t.placeholder}
-            className="flex-1 w-full bg-ue-bg/60 border border-ue-border hover:border-ue-border-hover focus:border-unreal-orange rounded-xl p-3 text-xs text-white leading-relaxed placeholder-ue-text-muted/60 focus:outline-none resize-none transition-all custom-scrollbar"
+            className="flex-1 w-full bg-black/5 dark:bg-black/60 border border-ue-border hover:border-ue-border-hover focus:border-unreal-orange rounded-xl p-3 text-xs text-ue-text leading-relaxed placeholder-ue-text-muted/60 focus:outline-none resize-none transition-all custom-scrollbar"
           />
         </div>
 
@@ -180,7 +182,7 @@ export default function ProjectNotesPanel({ project, onUpdateNotes, onClose, lan
         <div className="flex flex-col border-t border-ue-border pt-4">
           <div className="flex items-center gap-1.5 mb-3 text-ue-text-muted">
             <Clock size={14} className="text-epic-cyan" />
-            <span className="text-xs font-bold uppercase tracking-wider text-white">{t.reminders}</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-ue-text">{t.reminders}</span>
           </div>
 
           <form onSubmit={handleAddTodo} className="flex gap-2 mb-3">
@@ -190,7 +192,7 @@ export default function ProjectNotesPanel({ project, onUpdateNotes, onClose, lan
               onChange={(e) => setNewTodo(e.target.value)}
               placeholder={t.addPlaceholder}
               maxLength={120}
-              className="flex-1 bg-ue-bg/40 border border-ue-border hover:border-ue-border-hover focus:border-epic-cyan rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none placeholder-ue-text-muted/60 transition-all"
+              className="flex-1 bg-black/5 dark:bg-black/40 border border-ue-border hover:border-ue-border-hover focus:border-epic-cyan rounded-lg px-3 py-1.5 text-xs text-ue-text focus:outline-none placeholder-ue-text-muted/60 transition-all"
             />
             <button
               type="submit"
@@ -212,15 +214,15 @@ export default function ProjectNotesPanel({ project, onUpdateNotes, onClose, lan
                   key={todo.id}
                   className={`flex items-center justify-between p-2 rounded-lg border transition-all text-xs group ${
                     todo.completed
-                      ? 'bg-ue-bg/20 border-ue-border/30 text-ue-text-muted line-through opacity-60'
-                      : 'bg-ue-bg/40 border-ue-border hover:border-ue-border-hover text-white'
+                      ? 'bg-black/5 dark:bg-black/20 border-ue-border/30 text-ue-text-muted line-through opacity-60'
+                      : 'bg-black/5 dark:bg-black/40 border-ue-border hover:border-ue-border-hover text-ue-text'
                   }`}
                 >
                   <button
                     onClick={() => handleToggleTodo(todo.id)}
                     className={`w-4.5 h-4.5 rounded-md border flex items-center justify-center transition-all ${
                       todo.completed
-                        ? 'bg-emerald-500 border-emerald-600 text-white'
+                        ? 'bg-emerald-500 border-emerald-600 text-ue-text'
                         : 'border-ue-border hover:border-epic-cyan/60 bg-black/20'
                     }`}
                   >

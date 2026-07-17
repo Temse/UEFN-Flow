@@ -183,7 +183,7 @@ export default function ProjectHealthChart({ projects, lang }: ProjectHealthChar
           <div className="p-2 bg-epic-cyan/10 rounded-lg text-epic-cyan">
             <Activity size={18} />
           </div>
-          <h3 className="font-bold text-sm uppercase tracking-wider text-white">
+          <h3 className="font-bold text-sm uppercase tracking-wider text-ue-text">
             {lang === 'en' ? translations.en.projectHealthTitle : translations.de.projectHealthTitle}
           </h3>
         </div>

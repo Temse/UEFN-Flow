@@ -8,7 +8,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Layout, Zap, DollarSign, Shield, Sword, Ghost, Car, Target, Users, Flag, Gamepad2, EyeOff, Mountain, ArrowUp, Palette, FileText
 };
 
-interface OnboardingModalProps {
+interface OnboardingModalProps { key?: string | number;
   onComplete: (name: string, template: ProjectTemplate, islandCode?: string, customTemplateId?: string) => void;
   onCancel?: () => void;
 }
@@ -54,10 +54,18 @@ export default function OnboardingModal({ onComplete, onCancel }: OnboardingModa
   }, [selectedCustomId]);
 
   const fetchTemplates = () => {
-    fetch('/api/templates')
-      .then(res => res.json())
+    fetch("/api/templates")
+      .then(res => {
+         if (!res.ok) throw new Error("Backend error");
+         return res.json();
+      })
       .then(data => setCustomTemplates(data))
-      .catch(err => console.error(err));
+      .catch(err => {
+         console.error("Fallback to local templates:", err);
+         const cached = localStorage.getItem("uefn-cached-templates");
+         if (cached) setCustomTemplates(JSON.parse(cached));
+         else setCustomTemplates([]);
+      });
   };
 
   const deleteTemplate = async (id: string, e: React.MouseEvent) => {
@@ -65,7 +73,16 @@ export default function OnboardingModal({ onComplete, onCancel }: OnboardingModa
     if (!confirm('Vorlage wirklich löschen?')) return;
     
     try {
-      await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+      try {
+        await fetch(`/api/templates/${id}`, { method: "DELETE" });
+      } catch(backendErr) {
+        const cachedStr = localStorage.getItem("uefn-cached-templates");
+        if (cachedStr) {
+           let cached = JSON.parse(cachedStr);
+           cached = cached.filter((t: any) => t.id !== id);
+           localStorage.setItem("uefn-cached-templates", JSON.stringify(cached));
+        }
+      }
       fetchTemplates();
       if (selectedCustomId === id) setSelectedCustomId(null);
     } catch (err) {
@@ -137,10 +154,10 @@ export default function OnboardingModal({ onComplete, onCancel }: OnboardingModa
         <div className="p-8 border-b border-ue-border flex items-center justify-between bg-ue-bg/50">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-unreal-orange rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(255,103,33,0.3)] animate-pulse">
-              <Sparkles size={24} className="text-white" />
+              <Sparkles size={24} className="text-ue-text" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white tracking-tight">Neues Projekt erstellen</h1>
+              <h1 className="text-2xl font-black text-ue-text tracking-tight">Neues Projekt erstellen</h1>
               <p className="text-ue-text-muted text-sm">Wähle eine Vorlage und starte deinen Workflow.</p>
             </div>
           </div>
@@ -233,7 +250,7 @@ export default function OnboardingModal({ onComplete, onCancel }: OnboardingModa
                     <button 
                       type="button"
                       onClick={(e) => deleteTemplate(t.id, e)}
-                      className="absolute top-2 right-2 p-1 bg-black/40 hover:bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-all z-10 cursor-pointer"
+                      className="absolute top-2 right-2 p-1 bg-black/40 hover:bg-red-500 text-ue-text rounded opacity-0 group-hover:opacity-100 transition-all z-10 cursor-pointer"
                     >
                       <X size={12} />
                     </button>

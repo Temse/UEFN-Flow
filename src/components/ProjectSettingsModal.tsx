@@ -5,14 +5,16 @@ import { Project } from '../types';
 import { cn } from '../lib/utils';
 import { nanoid } from 'nanoid';
 import { translations, Language } from '../lib/translations';
+import { useLanguage } from '../lib/LanguageContext';
 
-interface ProjectSettingsModalProps {
+interface ProjectSettingsModalProps { key?: string | number;
+  onArchive?: () => void;
   project: Project;
   onClose: () => void;
   onUpdate: (name: string, imageUrl: string, islandCode: string, status: string) => void;
 }
 
-export default function ProjectSettingsModal({ project, onClose, onUpdate }: ProjectSettingsModalProps) {
+export default function ProjectSettingsModal({ project, onClose, onUpdate, onArchive }: ProjectSettingsModalProps) {
   const [name, setName] = useState(project.name);
   const [imageUrl, setImageUrl] = useState(project.image_url || '');
   const [islandCode, setIslandCode] = useState(project.island_code || '');
@@ -21,7 +23,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState('Layout');
 
-  const lang = (localStorage.getItem('uefn-lang') as Language) || 'en';
+  const { lang } = useLanguage();
   const t = translations[lang];
 
   const isPreset = ['online', 'offline', 'private', 'privat'].includes((project.status || '').toLowerCase().trim());
@@ -54,20 +56,28 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
   const handleSaveTemplate = async () => {
     setIsSavingTemplate(true);
     try {
-      const response = await fetch('/api/templates', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: nanoid(),
-          name: `${project.name} (${lang === 'en' ? 'Template' : 'Vorlage'})`,
-          columns: project.columns,
-          tasks: project.tasks,
-          icon: selectedIcon
-        })
-      });
-      if (response.ok) {
-        alert(lang === 'en' ? 'Template successfully saved!' : 'Vorlage erfolgreich gespeichert!');
+      const newTemplate = {
+        id: nanoid(),
+        name: `${project.name} (${lang === "en" ? "Template" : "Vorlage"})`,
+        columns: project.columns,
+        tasks: project.tasks,
+        icon: selectedIcon
+      };
+      try {
+        const response = await fetch("/api/templates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newTemplate)
+        });
+        if (!response.ok) throw new Error("Backend error");
+      } catch (backendErr) {
+        console.warn("Template backend save failed, using local fallback", backendErr);
+        const currentTemplatesStr = localStorage.getItem("uefn-cached-templates");
+        const currentTemplates = currentTemplatesStr ? JSON.parse(currentTemplatesStr) : [];
+        currentTemplates.push(newTemplate);
+        localStorage.setItem("uefn-cached-templates", JSON.stringify(currentTemplates));
       }
+      alert(lang === "en" ? "Template successfully saved!" : "Vorlage erfolgreich gespeichert!");
     } catch (err) {
       console.error(err);
     } finally {
@@ -127,8 +137,8 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
         className="relative w-full max-w-lg bg-ue-panel border border-ue-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         <div className="p-6 border-b border-ue-border flex items-center justify-between bg-ue-bg/50 shrink-0">
-          <h2 className="text-xl font-bold text-white">{t.settingsTitle}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-ue-panel-hover rounded-full text-ue-text-muted transition-colors cursor-pointer">
+          <h2 className="text-xl font-bold text-ue-text">{t.settingsTitle}</h2>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-ue-text-muted hover:text-ue-text cursor-pointer">
             <X size={20} />
           </button>
         </div>
@@ -143,7 +153,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
               type="text" 
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-ue-bg border border-ue-border rounded-lg px-4 py-2 text-white focus:border-epic-cyan outline-none transition-colors"
+              className="w-full bg-ue-bg border border-ue-border rounded-lg px-4 py-2 text-ue-text focus:border-epic-cyan outline-none transition-colors"
             />
           </section>
 
@@ -157,7 +167,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
               value={islandCode}
               onChange={(e) => setIslandCode(e.target.value)}
               placeholder="0000-0000-0000"
-              className="w-full bg-ue-bg border border-ue-border rounded-lg px-4 py-2 text-white focus:border-epic-cyan outline-none transition-colors"
+              className="w-full bg-ue-bg border border-ue-border rounded-lg px-4 py-2 text-ue-text focus:border-epic-cyan outline-none transition-colors"
             />
           </section>
 
@@ -182,8 +192,8 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
               >
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
                 Online
-              </button>
               
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -247,7 +257,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                   placeholder={lang === 'en' ? 'Enter custom status...' : 'Eigenen Status eingeben...'}
-                  className="w-full bg-ue-bg border border-ue-border rounded-lg px-4 py-2 text-white focus:border-epic-cyan outline-none transition-colors text-sm"
+                  className="w-full bg-ue-bg border border-ue-border rounded-lg px-4 py-2 text-ue-text focus:border-epic-cyan outline-none transition-colors text-sm"
                 />
               </motion.div>
             )}
@@ -275,7 +285,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                     <button 
                       onClick={() => setImageUrl('')}
-                      className="p-3 bg-unreal-orange text-white rounded-full hover:scale-110 transition-transform cursor-pointer"
+                      className="p-3 bg-unreal-orange text-ue-text rounded-full hover:scale-110 transition-transform cursor-pointer"
                     >
                       <Trash2 size={20} />
                     </button>
@@ -291,7 +301,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
                     <Upload size={24} />
                   </div>
                   <div className="text-center">
-                    <p className="text-xs font-bold text-white">
+                    <p className="text-xs font-bold text-ue-text">
                       {lang === 'en' ? 'Drag image here' : 'Bild hierhin ziehen'}
                     </p>
                     <p className="text-[10px] text-ue-text-muted mt-1">
@@ -311,7 +321,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
                   onChange={(e) => setImageUrl(e.target.value)}
                   disabled={imageUrl.startsWith('data:')}
                   placeholder={lang === 'en' ? 'Or paste an image URL...' : 'Oder Bild-URL einfügen...'}
-                  className="w-full bg-ue-bg border border-ue-border rounded-lg pl-10 pr-4 py-2 text-white focus:border-epic-cyan outline-none transition-colors disabled:opacity-50"
+                  className="w-full bg-ue-bg border border-ue-border rounded-lg pl-10 pr-4 py-2 text-ue-text focus:border-epic-cyan outline-none transition-colors disabled:opacity-50"
                 />
                 <ImageIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ue-text-muted" />
               </div>
@@ -322,7 +332,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
           <section className="p-4 bg-ue-bg/50 border border-ue-border rounded-xl">
             <div className="flex items-center gap-2 mb-3">
               <Save size={18} className="text-unreal-orange" />
-              <h3 className="font-bold text-sm uppercase tracking-wider text-white">
+              <h3 className="font-bold text-sm uppercase tracking-wider text-ue-text">
                 {lang === 'en' ? 'Save as Template' : 'Als Vorlage speichern'}
               </h3>
             </div>
@@ -350,7 +360,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
             <button 
               onClick={handleSaveTemplate}
               disabled={isSavingTemplate}
-              className="w-full py-2 bg-ue-panel border border-ue-border hover:border-unreal-orange text-white rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-2 bg-ue-panel border border-ue-border hover:border-unreal-orange text-ue-text rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               <Save size={14} />
               <span className="text-xs font-bold">
@@ -360,16 +370,29 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate }: Pro
           </section>
         </div>
 
-        <div className="p-4 border-t border-ue-border bg-ue-bg/30 flex justify-end gap-3 shrink-0">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-bold text-ue-text-muted hover:text-white cursor-pointer">
-            {lang === 'en' ? 'Cancel' : 'Abbrechen'}
-          </button>
-          <button 
-            onClick={handleSave}
-            className="px-6 py-2 bg-epic-cyan text-ue-bg font-bold rounded-lg hover:bg-white transition-colors cursor-pointer"
-          >
-            {lang === 'en' ? 'Save' : 'Speichern'}
-          </button>
+        <div className="p-4 border-t border-ue-border bg-ue-bg/30 flex justify-between items-center shrink-0">
+          <div>
+            {onArchive && (
+              <button 
+                onClick={() => { onArchive(); onClose(); }}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-ue-text-muted hover:text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-all cursor-pointer"
+              >
+                <Archive size={16} />
+                {lang === "en" ? (project.archived ? "Unarchive" : "Archive") : (project.archived ? "Wiederherstellen" : "Archivieren")}
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={onClose} className="px-4 py-2 text-sm font-bold text-ue-text-muted hover:text-ue-text cursor-pointer">
+              {lang === "en" ? "Cancel" : "Abbrechen"}
+            </button>
+            <button 
+              onClick={handleSave}
+              className="px-6 py-2 bg-epic-cyan text-ue-bg font-bold rounded-lg hover:bg-white transition-colors cursor-pointer"
+            >
+              {lang === "en" ? "Save" : "Speichern"}
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>

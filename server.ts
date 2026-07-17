@@ -108,6 +108,9 @@ try {
 try {
   db.prepare("ALTER TABLE projects ADD COLUMN notes TEXT").run();
 } catch (e) {}
+try {
+  db.prepare("ALTER TABLE projects ADD COLUMN archived INTEGER DEFAULT 0").run();
+} catch (e) {}
 
 async function startServer() {
   const app = express();
@@ -386,6 +389,12 @@ async function startServer() {
       console.error("Error creating project:", error);
       res.status(500).json({ error: error.message || "Internal Server Error" });
     }
+  });
+
+  app.patch("/api/projects/:id/archive", (req, res) => {
+    const { archived } = req.body;
+    db.prepare("UPDATE projects SET archived = ? WHERE id = ?").run(archived ? 1 : 0, req.params.id);
+    res.json({ success: true });
   });
 
   app.patch("/api/projects/:id/position", (req, res) => {

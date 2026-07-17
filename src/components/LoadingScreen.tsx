@@ -14,7 +14,7 @@ export default function LoadingScreen() {
         animate={{ opacity: 1, scale: 1 }}
         className="relative z-10 flex flex-col items-center"
       >
-        <div className="w-20 h-20 bg-unreal-orange rounded-2xl flex items-center justify-center text-5xl font-black text-white mb-8 shadow-[0_0_40px_rgba(255,103,33,0.4)] animate-pulse">
+        <div className="w-20 h-20 bg-unreal-orange rounded-2xl flex items-center justify-center text-5xl font-black text-ue-text mb-8 shadow-[0_0_40px_rgba(255,103,33,0.4)] animate-pulse">
           U
         </div>
         <div className="flex flex-col items-center gap-4">

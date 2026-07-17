@@ -31,62 +31,21 @@ import TaskModal from './TaskModal';
 import ProjectSettingsModal from './ProjectSettingsModal';
 import { ConfirmModal, InputModal } from './Modal';
 import { translations, Language } from '../lib/translations';
+import { useLanguage } from '../lib/LanguageContext';
 import ProjectNotesPanel from './ProjectNotesPanel';
 
 function FortniteStats({ islandCode }: { islandCode: string }) {
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchStats = () => {
-    if (!islandCode || islandCode === 'undefined') {
-      setLoading(false);
-      return;
-    }
-    fetch(`/api/fortnite/island/${islandCode}`)
-      .then(async res => {
-        const contentType = res.headers.get('content-type');
-        if (!res.ok) throw new Error('Stats not available');
-        if (!contentType || !contentType.includes('application/json')) throw new Error('Invalid response');
-        return res.json();
-      })
-      .then(data => {
-        setStats(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-  };
-
-  useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 60000);
-    return () => clearInterval(interval);
-  }, [islandCode]);
-
-  if (loading || !stats) return null;
+  if (!islandCode || islandCode === 'undefined') return null;
 
   return (
     <motion.div 
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4 bg-ue-panel/50 border border-ue-border rounded-xl p-4"
+      className="mb-6 flex gap-4 bg-ue-panel/50 border border-ue-border rounded-xl p-4"
     >
       <div>
-        <span className="text-[9px] font-bold text-ue-text-muted uppercase tracking-widest block mb-1">Insel-Name</span>
-        <span className="text-xs font-black text-white">{stats.title || 'Geladen...'}</span>
-      </div>
-      <div>
-        <span className="text-[9px] font-bold text-ue-text-muted uppercase tracking-widest block mb-1">Live-Spieler</span>
-        <span className="text-xs font-black text-epic-cyan">● {stats.active_players.toLocaleString()} CCU</span>
-      </div>
-      <div>
-        <span className="text-[9px] font-bold text-ue-text-muted uppercase tracking-widest block mb-1">Peak Heute</span>
-        <span className="text-xs font-black text-unreal-orange">{stats.peak_today.toLocaleString()} CCU</span>
-      </div>
-      <div>
-        <span className="text-[9px] font-bold text-ue-text-muted uppercase tracking-widest block mb-1">Bewertung</span>
-        <span className="text-xs font-black text-yellow-500">★ {stats.rating} / 5</span>
+        <span className="text-[9px] font-bold text-ue-text-muted uppercase tracking-widest block mb-1">Island Code</span>
+        <span className="text-xs font-black text-ue-text">{islandCode}</span>
       </div>
     </motion.div>
   );
@@ -116,11 +75,34 @@ export default function ProjectView() {
   const [columnToRename, setColumnToRename] = useState<Column | null>(null);
   const [columnIdForNewTask, setColumnIdForNewTask] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const handleArchive = async () => {
+    if (!project) return;
+    const newArchivedState = !project.archived;
+    setProject(prev => prev ? { ...prev, archived: newArchivedState } : prev);
+    socket?.emit("project-updated", { ...project, archived: newArchivedState });
+    try {
+      const cachedListStr = localStorage.getItem("uefn-cached-projects");
+      if (cachedListStr) {
+        const list = JSON.parse(cachedListStr);
+        const updatedList = list.map((p: any) => p.id === project.id ? { ...p, archived: newArchivedState } : p);
+        localStorage.setItem("uefn-cached-projects", JSON.stringify(updatedList));
+      }
+    } catch (e) {}
+    try {
+      await fetch(`/api/projects/${project.id}/archive`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ archived: newArchivedState })
+      });
+    } catch (e) {}
+  };
+
   const [showManualSaveSuccess, setShowManualSaveSuccess] = useState(false);
   const [showAutoSaveToast, setShowAutoSaveToast] = useState(false);
 
   // Read language and theme setting
-  const lang = (localStorage.getItem('uefn-lang') as Language) || 'en';
+  const { lang } = useLanguage();
   const t = translations[lang];
 
   const toggleNotes = () => {
@@ -195,7 +177,19 @@ export default function ProjectView() {
         setIsLoading(false);
       })
       .catch(err => {
-        console.error('Error fetching project:', err);
+        console.error('Error fetching project from backend:', err);
+        // Try fallback to local storage
+        try {
+          const cached = localStorage.getItem(`uefn-cached-project-${projectId}`);
+          if (cached) {
+            const data = JSON.parse(cached);
+            setProject(data);
+            setIsLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.error('Error parsing cached project:', e);
+        }
         setError(err.message);
         setIsLoading(false);
       });
@@ -381,7 +375,7 @@ export default function ProjectView() {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ position: idx })
-        });
+        }).catch(() => {});
       });
       return;
     }
@@ -404,7 +398,7 @@ export default function ProjectView() {
           taskId: activeId, 
           newColumnId, 
           newPosition: overIndex 
-        });
+        }).catch(() => {});
       } else {
         const updatedTasks = arrayMove(project.tasks!, activeIndex, overIndex);
         setProject({ ...project, tasks: updatedTasks });
@@ -413,7 +407,7 @@ export default function ProjectView() {
           taskId: activeId, 
           newColumnId, 
           newPosition: overIndex 
-        });
+        }).catch(() => {});
       }
     }
 
@@ -433,7 +427,7 @@ export default function ProjectView() {
           taskId: activeId, 
           newColumnId: overId, 
           newPosition: 0 
-        });
+        }).catch(() => {});
       }
     }
   };
@@ -640,7 +634,7 @@ export default function ProjectView() {
         <div className="w-16 h-16 bg-ue-panel border border-ue-border rounded-2xl flex items-center justify-center mb-6">
           <AlertTriangle size={32} className="text-unreal-orange" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">
+        <h2 className="text-2xl font-bold text-ue-text mb-2">
           {lang === 'en' ? 'Project Not Found' : 'Projekt nicht gefunden'}
         </h2>
         <p className="text-ue-text-muted mb-8 max-w-md">
@@ -648,7 +642,7 @@ export default function ProjectView() {
         </p>
         <Link 
           to="/" 
-          className="flex items-center gap-2 px-6 py-3 bg-ue-panel border border-ue-border hover:border-epic-cyan text-white rounded-xl transition-all font-bold"
+          className="flex items-center gap-2 px-6 py-3 bg-ue-panel border border-ue-border hover:border-epic-cyan text-ue-text rounded-xl transition-all font-bold"
         >
           <ArrowLeft size={18} />
           {t.backToDashboard}
@@ -670,7 +664,7 @@ export default function ProjectView() {
         showNotesActive={showNotes}
       />
 
-      <main className="flex-1 flex overflow-hidden bg-ue-bg">
+      <main className="flex-1 flex overflow-hidden bg-ue-bg relative">
         {/* Kanban Board Container */}
         <div className="flex-1 overflow-x-auto custom-scrollbar">
           <motion.div 
@@ -709,7 +703,7 @@ export default function ProjectView() {
                 }}>
                   {activeTask && (
                     <div className="bg-ue-panel border border-epic-cyan/50 p-4 rounded-lg shadow-2xl w-72 rotate-3 cursor-grabbing scale-105 transition-transform">
-                      <h4 className="font-medium text-sm text-white">{activeTask.title}</h4>
+                      <h4 className="font-medium text-sm text-ue-text">{activeTask.title}</h4>
                     </div>
                   )}
                 </DragOverlay>
@@ -732,7 +726,7 @@ export default function ProjectView() {
                   islandCode: project.island_code, 
                   status: project.status,
                   notes: newNotes
-                });
+                }).catch(() => {});
               }}
               onClose={() => {
                 setShowNotes(false);
@@ -740,7 +734,7 @@ export default function ProjectView() {
                   localStorage.setItem(`uefn-show-notes-${projectId}`, 'false');
                 } catch (e) {}
               }}
-              lang={lang}
+              
             />
           )}
         </AnimatePresence>
@@ -748,7 +742,7 @@ export default function ProjectView() {
 
       <AnimatePresence>
         {selectedTask && (
-          <TaskModal 
+          <TaskModal key="view-taskmodal" 
             task={selectedTask} 
             onClose={() => setSelectedTaskId(null)} 
             onUpdate={updateTask}
@@ -756,20 +750,21 @@ export default function ProjectView() {
           />
         )}
         {showSettings && (
-          <ProjectSettingsModal 
+          <ProjectSettingsModal key="view-settings"
+            onArchive={handleArchive} 
             project={project}
             onClose={() => setShowSettings(false)}
             onUpdate={updateProject}
           />
         )}
-        <InputModal 
+        <InputModal key="add-column" 
           isOpen={showAddColumn}
           title={lang === 'en' ? 'Add New Column' : 'Neue Spalte hinzufügen'}
           placeholder={lang === 'en' ? 'Enter column name...' : 'Spaltenname eingeben...'}
           onConfirm={addColumn}
           onCancel={() => setShowAddColumn(false)}
         />
-        <InputModal 
+        <InputModal key="add-task" 
           isOpen={!!columnIdForNewTask}
           title={lang === 'en' ? 'Add New Task' : 'Neue Aufgabe hinzufügen'}
           placeholder={lang === 'en' ? 'Enter task title...' : 'Aufgabentitel eingeben...'}
@@ -781,7 +776,7 @@ export default function ProjectView() {
           }}
           onCancel={() => setColumnIdForNewTask(null)}
         />
-        <InputModal 
+        <InputModal key="rename-column" 
           isOpen={!!columnToRename}
           title={lang === 'en' ? 'Rename Column' : 'Spalte umbenennen'}
           placeholder={lang === 'en' ? 'New column name...' : 'Neuer Spaltenname...'}
@@ -792,7 +787,7 @@ export default function ProjectView() {
           }}
           onCancel={() => setColumnToRename(null)}
         />
-        <ConfirmModal 
+        <ConfirmModal key="delete-column" 
           isOpen={!!columnToDelete}
           title={lang === 'en' ? 'Delete Column' : 'Spalte löschen'}
           message={lang === 'en' ? 'Are you sure you want to delete this column and all its tasks?' : 'Bist du sicher, dass du diese Spalte und alle darin enthaltenen Aufgaben löschen möchtest?'}
@@ -808,7 +803,7 @@ export default function ProjectView() {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-6 right-6 z-[9999] bg-ue-panel/95 backdrop-blur-md border border-emerald-500/30 text-white rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.15)] p-3 px-4 flex items-center gap-3"
+            className="fixed bottom-6 right-6 z-[9999] bg-ue-panel/95 backdrop-blur-md border border-emerald-500/30 text-ue-text rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.15)] p-3 px-4 flex items-center gap-3"
           >
             <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -827,7 +822,7 @@ export default function ProjectView() {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-6 right-6 z-[9999] bg-ue-panel/95 backdrop-blur-md border border-epic-cyan/30 text-white rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.15)] p-3 px-4 flex items-center gap-3"
+            className="fixed bottom-6 right-6 z-[9999] bg-ue-panel/95 backdrop-blur-md border border-epic-cyan/30 text-ue-text rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.15)] p-3 px-4 flex items-center gap-3"
           >
             <div className="w-5 h-5 rounded-full bg-epic-cyan/10 border border-epic-cyan/30 flex items-center justify-center">
               <span className="w-1.5 h-1.5 rounded-full bg-epic-cyan animate-pulse" />
