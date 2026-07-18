@@ -23,7 +23,6 @@ export const getTemplateTasks = (template: ProjectTemplate, lang: Language = 'de
       columnId: 'pre-production',
       title: t.task_game_loop_core_mecha_0,
       description: t.task_define_the_rules_and_1,
-      isCritical: true,
       subTasks: [
         { id: 'st-1-1', title: t.task_set_win_conditions_2, completed: false },
         { id: 'st-1-2', title: t.task_determine_number_of__3, completed: false },
@@ -50,7 +49,6 @@ export const getTemplateTasks = (template: ProjectTemplate, lang: Language = 'de
       columnId: 'environment',
       title: t.task_greyboxing_layout_11,
       description: t.task_block_out_the_level__12,
-      isCritical: true,
       subTasks: [
         { id: 'st-3-1', title: t.task_block_main_paths_13, completed: false },
         { id: 'st-3-2', title: t.task_check_lines_of_sight_14, completed: false },
@@ -103,7 +101,6 @@ export const getTemplateTasks = (template: ProjectTemplate, lang: Language = 'de
       columnId: 'logic',
       title: t.task_spawnpads_team_setti_34,
       description: t.task_where_players_spawn__35,
-      isCritical: true,
       subTasks: [
         { id: 'st-7-1', title: t.task_place_player_spawner_36, completed: false },
         { id: 'st-7-2', title: t.task_team_settings_invent_37, completed: false },
@@ -116,7 +113,6 @@ export const getTemplateTasks = (template: ProjectTemplate, lang: Language = 'de
       columnId: 'logic',
       title: t.task_end_game_condition_s_39,
       description: t.task_when_does_the_game_e_40,
-      isCritical: true,
       subTasks: [
         { id: 'st-8-1', title: t.task_configure_end_game_d_41, completed: false },
         { id: 'st-8-2', title: t.task_score_manager_option_42, completed: false },
@@ -130,7 +126,6 @@ export const getTemplateTasks = (template: ProjectTemplate, lang: Language = 'de
       columnId: 'optimization',
       title: t.task_generate_hlods_44,
       description: t.task_important_for_perfor_45,
-      isCritical: true,
       subTasks: [
         { id: 'st-opt-1-1', title: t.task_divide_level_into_gr_46, completed: false },
         { id: 'st-opt-1-2', title: t.task_assign_hlod_layer_47, completed: false },
@@ -156,7 +151,6 @@ export const getTemplateTasks = (template: ProjectTemplate, lang: Language = 'de
       columnId: 'optimization',
       title: t.task_perform_memory_check_55,
       description: t.task_stay_under_the_100k__56,
-      isCritical: true,
       subTasks: [
         { id: 'st-opt-3-1', title: t.task_open_project_size_to_57, completed: false },
         { id: 'st-opt-3-2', title: t.task_identify_expensive_a_58, completed: false },
@@ -202,23 +196,11 @@ export const getTemplateTasks = (template: ProjectTemplate, lang: Language = 'de
       tips: [t.task_use_the_creator_port_69],
       notes: '',
     },
-    {
-      id: 'task-rel-loc',
-      columnId: 'release',
-      title: t.task_localization_lokalis_70,
-      description: t.task_translate_your_map_f_71,
-      isCritical: true,
-      subTasks: [
-        { id: 'st-rel-loc-1', title: t.task_generate_localizatio_72, completed: false },
-        { id: 'st-rel-loc-2', title: t.task_translate_texts_e_g__73, completed: false },
-        { id: 'st-rel-loc-3', title: t.task_test_in_game_74, completed: false },
-      ],
-      tips: [t.task_more_languages_large_75],
-      notes: '',
-    },
+
     {
       id: 'task-rel-2',
       columnId: 'release',
+      isCritical: true,
       title: t.task_create_1920x1080_thu_76,
       description: t.task_the_face_of_your_map_77,
       subTasks: [

@@ -23,6 +23,7 @@ import io from 'socket.io-client';
 import { nanoid } from 'nanoid';
 import { AlertTriangle, ArrowLeft, Loader2, Layout } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import LoadingScreen from './LoadingScreen';
 import { Project, Task, Column, deduplicateById } from '../types';
 import Header from './Header';
@@ -93,9 +94,7 @@ export default function ProjectView() {
     } catch (e) {}
   };
 
-  const [showManualSaveSuccess, setShowManualSaveSuccess] = useState(false);
-  const [showAutoSaveToast, setShowAutoSaveToast] = useState(false);
-
+    
   // Read language and theme setting
   const { lang } = useLanguage();
   const t = translations[lang];
@@ -114,9 +113,15 @@ export default function ProjectView() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setShowAutoSaveToast(true);
-      const timer = setTimeout(() => setShowAutoSaveToast(false), 4000);
-      return () => clearTimeout(timer);
+      toast(t.progressSaved || 'Progress auto-saved', {
+        icon: '🔄',
+        style: {
+          border: '1px solid #4ade80',
+          padding: '16px',
+          color: '#ffffff',
+          background: '#1a1a1a',
+        },
+      });
     }, 5 * 60 * 1000); // 5 minutes
     return () => clearInterval(interval);
   }, []);
@@ -237,7 +242,7 @@ export default function ProjectView() {
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    if (!over || !project) return;
+    if (!over) return;
     
     const activeId = active.id as string;
     const overId = over.id as string;
@@ -249,40 +254,47 @@ export default function ProjectView() {
 
     if (!isActiveATask) return;
 
-    // Cross-column movement
-    if (isActiveATask && isOverATask) {
-      const activeIndex = project.tasks!.findIndex(t => t.id === activeId);
-      const overIndex = project.tasks!.findIndex(t => t.id === overId);
-      const newColumnId = project.tasks![overIndex].columnId;
+    setProject(prev => {
+      if (!prev || !prev.tasks) return prev;
+      
+      const activeIndex = prev.tasks.findIndex(t => t.id === activeId);
+      if (activeIndex === -1) return prev;
 
-      if (project.tasks![activeIndex].columnId !== newColumnId) {
-        const newTasks = [...project.tasks!];
-        newTasks[activeIndex].columnId = newColumnId;
-        const updatedTasks = arrayMove(newTasks, activeIndex, overIndex);
-        setProject({ ...project, tasks: updatedTasks });
-        socket?.emit('task-moved', { projectId, taskId: activeId, newColumnId, newPosition: overIndex });
-      }
-    }
+      if (isActiveATask && isOverATask) {
+        const overIndex = prev.tasks.findIndex(t => t.id === overId);
+        if (overIndex === -1) return prev;
 
-    if (isActiveATask && isOverAColumn) {
-      const activeIndex = project.tasks!.findIndex(t => t.id === activeId);
-      if (project.tasks![activeIndex].columnId !== overId) {
-        const newTasks = [...project.tasks!];
-        newTasks[activeIndex].columnId = overId;
-        setProject({ ...project, tasks: newTasks });
-        
-        if (overId === 'release') {
-          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        const newColumnId = prev.tasks[overIndex].columnId;
+        if (prev.tasks[activeIndex].columnId !== newColumnId) {
+          const newTasks = [...prev.tasks];
+          newTasks[activeIndex] = { ...newTasks[activeIndex], columnId: newColumnId };
+          const updatedTasks = arrayMove(newTasks, activeIndex, overIndex);
+          socket?.emit('task-moved', { projectId, taskId: activeId, newColumnId, newPosition: overIndex });
+          return { ...prev, tasks: updatedTasks };
         }
-        socket?.emit('task-moved', { projectId, taskId: activeId, newColumnId: overId, newPosition: 0 });
       }
-    }
+
+      if (isActiveATask && isOverAColumn) {
+        if (prev.tasks[activeIndex].columnId !== overId) {
+          const newTasks = [...prev.tasks];
+          newTasks[activeIndex] = { ...newTasks[activeIndex], columnId: overId };
+          
+          if (overId === 'release') {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          }
+          socket?.emit('task-moved', { projectId, taskId: activeId, newColumnId: overId, newPosition: 0 });
+          return { ...prev, tasks: newTasks };
+        }
+      }
+
+      return prev;
+    });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveTaskId(null);
     const { active, over } = event;
-    if (!over || !project) return;
+    if (!over) return;
 
     const activeId = active.id as string;
     const overId = over.id as string;
@@ -293,25 +305,30 @@ export default function ProjectView() {
     const isActiveATask = active.data.current?.type === 'Task';
     const isOverATask = over.data.current?.type === 'Task';
 
-    // Reorder columns
-    if (isActiveAColumn && isOverAColumn) {
-      const activeIndex = project.columns!.findIndex(c => c.id === activeId);
-      const overIndex = project.columns!.findIndex(c => c.id === overId);
-      const updatedColumns = arrayMove(project.columns!, activeIndex, overIndex);
-      setProject({ ...project, columns: updatedColumns });
-      return;
-    }
+    setProject(prev => {
+      if (!prev) return prev;
 
-    // Reorder tasks in same column
-    if (isActiveATask && isOverATask) {
-      const activeIndex = project.tasks!.findIndex(t => t.id === activeId);
-      const overIndex = project.tasks!.findIndex(t => t.id === overId);
-      if (project.tasks![activeIndex].columnId === project.tasks![overIndex].columnId) {
-        const updatedTasks = arrayMove(project.tasks!, activeIndex, overIndex);
-        setProject({ ...project, tasks: updatedTasks });
-        socket?.emit('task-moved', { projectId, taskId: activeId, newColumnId: project.tasks![activeIndex].columnId, newPosition: overIndex });
+      if (isActiveAColumn && isOverAColumn && prev.columns) {
+        const activeIndex = prev.columns.findIndex(c => c.id === activeId);
+        const overIndex = prev.columns.findIndex(c => c.id === overId);
+        if (activeIndex === -1 || overIndex === -1) return prev;
+        const updatedColumns = arrayMove(prev.columns, activeIndex, overIndex);
+        return { ...prev, columns: updatedColumns };
       }
-    }
+
+      if (isActiveATask && isOverATask && prev.tasks) {
+        const activeIndex = prev.tasks.findIndex(t => t.id === activeId);
+        const overIndex = prev.tasks.findIndex(t => t.id === overId);
+        if (activeIndex === -1 || overIndex === -1) return prev;
+        
+        if (prev.tasks[activeIndex].columnId === prev.tasks[overIndex].columnId) {
+          const updatedTasks = arrayMove(prev.tasks, activeIndex, overIndex);
+          socket?.emit('task-moved', { projectId, taskId: activeId, newColumnId: prev.tasks[activeIndex].columnId, newPosition: overIndex });
+          return { ...prev, tasks: updatedTasks };
+        }
+      }
+      return prev;
+    });
   };
 
   const logAction = async (action: string, details: string) => {
@@ -427,8 +444,19 @@ export default function ProjectView() {
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);
-      setShowManualSaveSuccess(true);
-      setTimeout(() => setShowManualSaveSuccess(false), 3000);
+      toast.success(t.allChangesSaved || 'All changes saved!', {
+        icon: '💾',
+        style: {
+          border: '1px solid #00c9e0',
+          padding: '16px',
+          color: '#ffffff',
+          background: '#1a1a1a',
+        },
+        iconTheme: {
+          primary: '#00c9e0',
+          secondary: '#1a1a1a',
+        },
+      });
     }, 800);
   };
 
@@ -611,45 +639,7 @@ export default function ProjectView() {
           onConfirm={confirmDeleteColumn}
           onCancel={() => setColumnToDelete(null)}
         />
-        {showAutoSaveToast && (
-          <motion.div
-            key="view-autosave"
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-6 right-6 z-[9999] bg-ue-panel/95 backdrop-blur-md border border-emerald-500/30 text-ue-text rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.15)] p-3 px-4 flex items-center gap-3"
-          >
-            <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Autosave</span>
-              <span className="text-[11px] font-bold text-ue-text-muted">
-                {t.progressSaved}
-              </span>
-            </div>
-          </motion.div>
-        )}
-        {showManualSaveSuccess && (
-          <motion.div
-            key="view-manualsave"
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-6 right-6 z-[9999] bg-ue-panel/95 backdrop-blur-md border border-epic-cyan/30 text-ue-text rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.15)] p-3 px-4 flex items-center gap-3"
-          >
-            <div className="w-5 h-5 rounded-full bg-epic-cyan/10 border border-epic-cyan/30 flex items-center justify-center">
-              <span className="w-1.5 h-1.5 rounded-full bg-epic-cyan animate-pulse" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-epic-cyan">Save</span>
-              <span className="text-[11px] font-bold text-ue-text-muted">
-                {t.allChangesSaved}
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { calculateProgress } from '../lib/progress';
+import toast from 'react-hot-toast';
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Folder, Clock, Trash2, ArrowRight, Layout, Sparkles, MessageSquare, Activity, Monitor, Globe, Sun, Moon, Download, Settings, Upload, Save, Loader2, Archive, Search } from 'lucide-react';
@@ -221,6 +222,7 @@ export default function Dashboard() {
       localStorage.setItem('uefn-cached-projects', JSON.stringify(deduplicateById(updatedList)));
       localStorage.setItem(`uefn-cached-project-${newId}`, JSON.stringify(newProj));
       setShowImportExport(null);
+      toast.success(t.projectImported || 'Project imported successfully!');
     } catch (e) {
       console.error(e);
       alert(t.importFailed);
@@ -322,6 +324,7 @@ export default function Dashboard() {
       const updatedList = [...projects, newProj];
       setProjects(deduplicateById(updatedList));
       localStorage.setItem('uefn-cached-projects', JSON.stringify(deduplicateById(updatedList)));
+      toast.success(t.projectCreated || 'Project created successfully!');
       navigate(`/project/${localId}`);
     } catch (storageErr) {
       console.error('Local Storage also failed:', storageErr);
@@ -338,6 +341,7 @@ export default function Dashboard() {
     const updatedProjects = projects.map(p => p.id === id ? { ...p, archived: newArchivedState } : p);
     setProjects(updatedProjects);
     localStorage.setItem("uefn-cached-projects", JSON.stringify(deduplicateById(updatedProjects)));
+    toast.success(newArchivedState ? (t.projectArchived || 'Project archived') : (t.projectUnarchived || 'Project unarchived'));
   };
 
   const confirmDeleteProject = async () => {
@@ -347,6 +351,7 @@ export default function Dashboard() {
     localStorage.setItem("uefn-cached-projects", JSON.stringify(deduplicateById(updatedProjects)));
     localStorage.removeItem(`uefn-cached-project-${projectToDelete}`);
     setProjectToDelete(null);
+    toast.success(t.projectDeleted || 'Project deleted');
   };
 
   const deleteProject = async (id: string, e: React.MouseEvent) => {

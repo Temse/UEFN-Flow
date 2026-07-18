@@ -9,6 +9,7 @@ import { LanguageProvider } from './lib/LanguageContext';
 import Dashboard from './components/Dashboard';
 import ProjectView from './components/ProjectView';
 import LoadingScreen from './components/LoadingScreen';
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   const [isAppLoading, setIsAppLoading] = useState(true);
@@ -25,6 +26,16 @@ export default function App() {
 
   return (
     <LanguageProvider>
+      <Toaster 
+        position="bottom-right" 
+        toastOptions={{ 
+          style: { 
+            background: '#1a1a1a', 
+            color: '#fff',
+            border: '1px solid #333'
+          } 
+        }} 
+      />
       <Router>
       <div className="min-h-screen bg-ue-bg text-ue-text">
         <Routes>

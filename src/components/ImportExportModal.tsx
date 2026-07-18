@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Copy, Check, Save } from 'lucide-react';
 import { motion } from 'motion/react';
 import { translations } from '../lib/translations';
+import toast from 'react-hot-toast';
 
 interface ImportExportModalProps {
   mode: 'import' | 'export';
@@ -21,6 +22,7 @@ export default function ImportExportModal({ mode, exportData, onImport, onClose,
     if (exportData) {
       await navigator.clipboard.writeText(exportData);
       setCopied(true);
+      toast.success(t.copiedToClipboard || 'Copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
     }
   };
