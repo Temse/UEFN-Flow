@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { Project } from '../types';
+import { calculateProgress } from '../lib/progress';
 import { Activity } from 'lucide-react';
 import { translations } from '../lib/translations';
 
@@ -13,32 +14,7 @@ export default function ProjectHealthChart({ projects, lang }: ProjectHealthChar
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // Helper to calculate project progress
-  const calculateProgress = (project: Project): number => {
-    const tasks = project.tasks || [];
-    if (tasks.length === 0) return 0;
-
-    const totalSubTasks = tasks.reduce((acc, task) => acc + (task.subTasks?.length || 0), 0);
-    const completedSubTasks = tasks.reduce(
-      (acc, task) => acc + (task.subTasks?.filter(st => st.completed).length || 0), 
-      0
-    );
-
-    if (totalSubTasks > 0) {
-      return Math.round((completedSubTasks / totalSubTasks) * 100);
-    }
-
-    // Fallback: use column positions. If a task is in the last column, count it as completed.
-    const cols = project.columns || [];
-    if (cols.length === 0) return 0;
-    
-    // Find the last column ID (highest position or last index)
-    const sortedCols = [...cols].sort((a, b) => (a.position || 0) - (b.position || 0));
-    const lastColId = sortedCols[sortedCols.length - 1].id;
-
-    const completedTasks = tasks.filter(t => t.columnId === lastColId).length;
-    return Math.round((completedTasks / tasks.length) * 100);
-  };
-
+  
   useEffect(() => {
     if (!svgRef.current || projects.length === 0) return;
 
@@ -47,7 +23,7 @@ export default function ProjectHealthChart({ projects, lang }: ProjectHealthChar
 
     const chartData = projects.map(p => ({
       name: p.name,
-      progress: calculateProgress(p),
+      progress: calculateProgress(p.tasks || [], p.columns || []),
       status: p.status || 'Blank'
     })).slice(0, 5); // Display top 5 projects
 

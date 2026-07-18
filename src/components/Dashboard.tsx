@@ -1,3 +1,4 @@
+import { calculateProgress } from '../lib/progress';
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Folder, Clock, Trash2, ArrowRight, Layout, Sparkles, MessageSquare, Activity, Monitor, Globe, Sun, Moon, Download, Settings, Upload, Save, Loader2, Archive } from 'lucide-react';
@@ -7,7 +8,8 @@ import { Project, ProjectTemplate, ProjectLog, deduplicateById } from '../types'
 import OnboardingModal from './OnboardingModal';
 import { ConfirmModal } from './Modal';
 import LanguageSelectorModal from './LanguageSelectorModal';
-import { INITIAL_COLUMNS, getTemplateTasks } from '../constants';
+import ImportExportModal from './ImportExportModal';
+import { getInitialColumns, getTemplateTasks } from '../constants';
 import { translations, Language } from '../lib/translations';
 import { useLanguage } from '../lib/LanguageContext';
 
@@ -49,50 +51,23 @@ function getStatusBadgeClass(status: string) {
 }
 
 function calculateProjectStats(project: any) {
-  let progress = 0;
+  let progress = calculateProgress(project.tasks || [], project.columns || []);
   let health = 100;
   
-  if (project.tasks && project.tasks.length > 0 && project.columns && project.columns.length > 0) {
-    const tasks = project.tasks;
-    const columns = project.columns;
-    
-    const sortedCols = [...columns].sort((a: any, b: any) => (a.position || 0) - (b.position || 0));
-    const lastColId = sortedCols.length > 0 ? sortedCols[sortedCols.length - 1].id : null;
-    
-    if (lastColId) {
-      const completedTasks = tasks.filter((t: any) => t.column_id === lastColId || t.columnId === lastColId).length;
-      progress = Math.round((completedTasks / tasks.length) * 100);
-    }
-    
-    const pendingCritical = tasks.filter((t: any) => {
+  if (project.tasks && project.tasks.length > 0) {
+    const pendingCritical = project.tasks.filter((t: any) => {
       const isCrit = t.is_critical || t.isCritical;
-      const isCompleted = lastColId ? (t.column_id === lastColId || t.columnId === lastColId) : false;
-      return isCrit && !isCompleted;
+      const allSubTasksCompleted = t.subTasks && t.subTasks.length > 0 
+        ? t.subTasks.every((st: any) => !!st.completed) 
+        : false;
+      return isCrit && !allSubTasksCompleted;
     }).length;
-
-    const overdueCount = tasks.filter((t: any) => {
-      const dueDateStr = t.due_date || t.dueDate;
-      if (!dueDateStr) return false;
-      
-      const isCompleted = lastColId ? (t.column_id === lastColId || t.columnId === lastColId) : false;
-      if (isCompleted) return false;
-      
-      try {
-        const dueDate = new Date(dueDateStr);
-        return dueDate.getTime() < Date.now();
-      } catch (e) {
-        return false;
-      }
-    }).length;
-
-    health = 100 - (pendingCritical * 15) - (overdueCount * 25);
-    if (health < 10) health = 10;
+    health = Math.max(0, 100 - (pendingCritical * 10));
   }
-
   return { progress, health };
 }
 
-function ProjectCard({ project, onDelete, onArchive, index, lang }: any) {
+function ProjectCard({ project, onDelete, onArchive, onExport, index, lang }: any) {
   const displayStatus = project.status || (project.template && typeof project.template === 'string' ? project.template.split('-').map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : 'Blank');
   const projStats = calculateProjectStats(project);
 
@@ -131,11 +106,7 @@ function ProjectCard({ project, onDelete, onArchive, index, lang }: any) {
           
           <div className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-auto">
             <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                window.open(`/api/backup/export/${project.id}`, '_blank');
-              }}
+              onClick={(e) => onExport(project, e)}
               className="p-2 bg-black/60 hover:bg-epic-cyan text-ue-text rounded-lg backdrop-blur-md transition-all hover:scale-110 border border-white/10 cursor-pointer"
               title={lang === 'en' ? 'Export Project' : 'Projekt exportieren'}
             >
@@ -235,6 +206,25 @@ export default function Dashboard() {
     }
   });
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [showImportExport, setShowImportExport] = useState<{mode: 'import' | 'export', data?: string} | null>(null);
+  
+  const handleImport = (dataStr: string) => {
+    try {
+      const parsed = JSON.parse(dataStr);
+      // Generate a new ID to avoid collisions if they re-import the same project
+      const newId = 'proj_' + Math.random().toString(36).substr(2, 9);
+      const newProj = { ...parsed, id: newId };
+      const updatedList = [...projects, newProj];
+      setProjects(deduplicateById(updatedList));
+      localStorage.setItem('uefn-cached-projects', JSON.stringify(deduplicateById(updatedList)));
+      localStorage.setItem(`uefn-cached-project-${newId}`, JSON.stringify(newProj));
+      setShowImportExport(null);
+    } catch (e) {
+      console.error(e);
+      alert(lang === 'en' ? 'Failed to import project' : 'Import fehlgeschlagen');
+    }
+  };
+
   const [isSaving, setIsSaving] = useState(false);
   const [showManualSaveSuccess, setShowManualSaveSuccess] = useState(false);
   const [showAutoSaveToast, setShowAutoSaveToast] = useState(false);
@@ -290,8 +280,8 @@ export default function Dashboard() {
   };
 
   const handleCreateProject = async (name: string, template: ProjectTemplate, island_code?: string, customTemplateId?: string) => {
-    let columns = INITIAL_COLUMNS;
-    let tasks = getTemplateTasks(template);
+    let columns = getInitialColumns(lang);
+    let tasks = getTemplateTasks(template, lang);
     
     try {
       if (customTemplateId) {
@@ -393,6 +383,14 @@ export default function Dashboard() {
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button
+              onClick={() => setShowImportExport({ mode: 'import' })}
+              className="text-ue-text-muted hover:text-epic-cyan transition-colors flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded bg-ue-border/50 hover:bg-ue-border"
+              title={lang === 'en' ? 'Import Project' : 'Projekt importieren'}
+            >
+              <Upload size={16} />
+              {lang === 'en' ? 'Import' : 'Import'}
+            </button>
+            <button
               onClick={() => setShowArchived(!showArchived)}
               className="text-ue-text-muted hover:text-epic-cyan transition-colors flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded bg-ue-border/50 hover:bg-ue-border"
             >
@@ -451,6 +449,16 @@ export default function Dashboard() {
                     project={project} 
                     onDelete={deleteProject} 
                     onArchive={archiveProject}
+                    onExport={(p, e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const fullProject = localStorage.getItem(`uefn-cached-project-${p.id}`);
+                      if (fullProject) {
+                        setShowImportExport({ mode: 'export', data: fullProject });
+                      } else {
+                        setShowImportExport({ mode: 'export', data: JSON.stringify(p, null, 2) });
+                      }
+                    }}
                     index={index}
                     lang={lang}
                   />
@@ -489,7 +497,21 @@ export default function Dashboard() {
             onClose={() => setShowLanguageSelector(false)}
           />
         )}
+      {showImportExport && (
+          <ImportExportModal
+            mode={showImportExport.mode}
+            exportData={showImportExport.data}
+            onImport={handleImport}
+            onClose={() => setShowImportExport(null)}
+            lang={lang}
+          />
+        )}
       </AnimatePresence>
+      <footer className="max-w-7xl mx-auto px-6 pb-6 text-center text-ue-text-muted text-sm flex items-center justify-center gap-4">
+        <a href="https://discord.gg/" target="_blank" rel="noopener noreferrer" className="hover:text-epic-cyan transition-colors">Discord</a>
+        <span>&bull;</span>
+        <span>made by hifn_w</span>
+      </footer>
     </div>
   );
 }

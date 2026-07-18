@@ -4,6 +4,7 @@ import { ArrowLeft, Settings, MessageSquare, Save, Loader2, FileText } from 'luc
 import { Link } from 'react-router-dom';
 import { Task } from '../types';
 import { Language, translations } from '../lib/translations';
+import { calculateProgress } from '../lib/progress';
 
 interface HeaderProps {
   projectName: string;
@@ -26,13 +27,7 @@ export default function Header({
   onToggleNotes,
   showNotesActive
 }: HeaderProps) {
-  const totalSubTasks = tasks.reduce((acc, task) => acc + (task.subTasks?.length || 0), 0);
-  const completedSubTasks = tasks.reduce(
-    (acc, task) => acc + (task.subTasks?.filter(st => st.completed).length || 0), 
-    0
-  );
-  
-  const progress = totalSubTasks > 0 ? Math.round((completedSubTasks / totalSubTasks) * 100) : 0;
+  const progress = calculateProgress(tasks, []);
   
   const { lang } = useLanguage();
   const t = translations[lang];

@@ -1,4 +1,6 @@
+const fs = require('fs');
 
+const code = `
 import { Column, Task, ProjectTemplate } from './types';
 
 export const getInitialColumns = (lang: string = 'de'): Column[] => [
@@ -457,3 +459,6 @@ export const getTemplateTasks = (template: ProjectTemplate, lang: string = 'de')
 
   return [...baseTasks, ...templateSpecificTasks];
 };
+`;
+
+fs.writeFileSync('src/constants.ts', code);
