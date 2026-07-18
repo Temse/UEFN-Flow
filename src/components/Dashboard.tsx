@@ -1,7 +1,7 @@
 import { calculateProgress } from '../lib/progress';
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Folder, Clock, Trash2, ArrowRight, Layout, Sparkles, MessageSquare, Activity, Monitor, Globe, Sun, Moon, Download, Settings, Upload, Save, Loader2, Archive } from 'lucide-react';
+import { Plus, Folder, Clock, Trash2, ArrowRight, Layout, Sparkles, MessageSquare, Activity, Monitor, Globe, Sun, Moon, Download, Settings, Upload, Save, Loader2, Archive, Search } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import LoadingScreen from './LoadingScreen';
 import { Project, ProjectTemplate, ProjectLog, deduplicateById } from '../types';
@@ -198,6 +198,7 @@ export default function Dashboard() {
   });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(() => {
     try {
       const cached = localStorage.getItem('uefn-cached-projects');
@@ -410,7 +411,7 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        <div className="mb-12 flex justify-between items-end">
+                <div className="mb-12 flex justify-between items-end flex-wrap gap-4">
           <div>
             <h1 className="text-4xl font-black mb-2 tracking-tight">
               {t.dashboardSubtitle}
@@ -418,6 +419,16 @@ export default function Dashboard() {
             <p className="text-ue-text-muted">
               {t.activeProjectsStats}
             </p>
+          </div>
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ue-text-muted" size={18} />
+            <input
+              type="text"
+              placeholder={t.searchProjects || "Search projects..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-ue-panel/50 border border-ue-border rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-epic-cyan text-ue-text placeholder-ue-text-muted/50"
+            />
           </div>
         </div>
 
@@ -439,6 +450,7 @@ export default function Dashboard() {
             <AnimatePresence mode="popLayout">
               {projects
                 .filter((p) => (showArchived ? p.archived : !p.archived))
+                .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
                 .sort((a, b) => {
                   const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
                   const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;

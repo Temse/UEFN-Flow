@@ -177,6 +177,19 @@ export const getTemplateTasks = (template: ProjectTemplate, lang: Language = 'de
       notes: '',
     },
     // Release
+
+    {
+      id: 'task-opt-5',
+      columnId: 'optimization',
+      title: t.task_localize_project_1001,
+      description: t.task_translate_ui_texts__1002,
+      subTasks: [
+        { id: 'st-opt-5-1', title: t.task_add_string_tables_1003, completed: false },
+        { id: 'st-opt-5-2', title: t.task_translate_to_engli_1004, completed: false },
+      ],
+      tips: [t.task_more_languages_eq__1005],
+      notes: ''
+    },
     {
       id: 'task-rel-1',
       columnId: 'release',

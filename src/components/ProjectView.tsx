@@ -238,31 +238,18 @@ export default function ProjectView() {
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over || !project) return;
-
+    
     const activeId = active.id as string;
     const overId = over.id as string;
-
     if (activeId === overId) return;
 
     const isActiveATask = active.data.current?.type === 'Task';
     const isOverATask = over.data.current?.type === 'Task';
-    const isActiveAColumn = active.data.current?.type === 'Column';
     const isOverAColumn = over.data.current?.type === 'Column';
-
-    if (isActiveAColumn && isOverAColumn) {
-      const activeIndex = project.columns!.findIndex(c => c.id === activeId);
-      const overIndex = project.columns!.findIndex(c => c.id === overId);
-      const updatedColumns = arrayMove(project.columns!, activeIndex, overIndex);
-      setProject({ ...project, columns: updatedColumns });
-      
-      // Persist column positions
-      updatedColumns.forEach((col: Column, idx: number) => {
-      });
-      return;
-    }
 
     if (!isActiveATask) return;
 
+    // Cross-column movement
     if (isActiveATask && isOverATask) {
       const activeIndex = project.tasks!.findIndex(t => t.id === activeId);
       const overIndex = project.tasks!.findIndex(t => t.id === overId);
@@ -273,22 +260,7 @@ export default function ProjectView() {
         newTasks[activeIndex].columnId = newColumnId;
         const updatedTasks = arrayMove(newTasks, activeIndex, overIndex);
         setProject({ ...project, tasks: updatedTasks });
-        
-        socket?.emit('task-moved', { 
-          projectId, 
-          taskId: activeId, 
-          newColumnId, 
-          newPosition: overIndex 
-        });
-      } else {
-        const updatedTasks = arrayMove(project.tasks!, activeIndex, overIndex);
-        setProject({ ...project, tasks: updatedTasks });
-        socket?.emit('task-moved', { 
-          projectId, 
-          taskId: activeId, 
-          newColumnId, 
-          newPosition: overIndex 
-        });
+        socket?.emit('task-moved', { projectId, taskId: activeId, newColumnId, newPosition: overIndex });
       }
     }
 
@@ -302,18 +274,45 @@ export default function ProjectView() {
         if (overId === 'release') {
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         }
-
-        socket?.emit('task-moved', { 
-          projectId, 
-          taskId: activeId, 
-          newColumnId: overId, 
-          newPosition: 0 
-        });
+        socket?.emit('task-moved', { projectId, taskId: activeId, newColumnId: overId, newPosition: 0 });
       }
     }
   };
 
-  const handleDragEnd = () => setActiveTaskId(null);
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveTaskId(null);
+    const { active, over } = event;
+    if (!over || !project) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    if (activeId === overId) return;
+
+    const isActiveAColumn = active.data.current?.type === 'Column';
+    const isOverAColumn = over.data.current?.type === 'Column';
+    const isActiveATask = active.data.current?.type === 'Task';
+    const isOverATask = over.data.current?.type === 'Task';
+
+    // Reorder columns
+    if (isActiveAColumn && isOverAColumn) {
+      const activeIndex = project.columns!.findIndex(c => c.id === activeId);
+      const overIndex = project.columns!.findIndex(c => c.id === overId);
+      const updatedColumns = arrayMove(project.columns!, activeIndex, overIndex);
+      setProject({ ...project, columns: updatedColumns });
+      return;
+    }
+
+    // Reorder tasks in same column
+    if (isActiveATask && isOverATask) {
+      const activeIndex = project.tasks!.findIndex(t => t.id === activeId);
+      const overIndex = project.tasks!.findIndex(t => t.id === overId);
+      if (project.tasks![activeIndex].columnId === project.tasks![overIndex].columnId) {
+        const updatedTasks = arrayMove(project.tasks!, activeIndex, overIndex);
+        setProject({ ...project, tasks: updatedTasks });
+        socket?.emit('task-moved', { projectId, taskId: activeId, newColumnId: project.tasks![activeIndex].columnId, newPosition: overIndex });
+      }
+    }
+  };
 
   const logAction = async (action: string, details: string) => {
     try {
