@@ -10,6 +10,7 @@ import OnboardingModal from './OnboardingModal';
 import { ConfirmModal } from './Modal';
 import LanguageSelectorModal from './LanguageSelectorModal';
 import ImportExportModal from './ImportExportModal';
+import GlobalSettingsModal from './GlobalSettingsModal';
 import { getInitialColumns, getTemplateTasks } from '../constants';
 import { translations, Language } from '../lib/translations';
 import { useLanguage } from '../lib/LanguageContext';
@@ -183,6 +184,7 @@ function ProjectCard({ project, onDelete, onArchive, onExport, index, lang }: an
         </div>
       </Link>
       </motion.div>
+    
     </div>
   );
 }
@@ -198,6 +200,7 @@ export default function Dashboard() {
     }
   });
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showGlobalSettings, setShowGlobalSettings] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(() => {
@@ -383,6 +386,13 @@ export default function Dashboard() {
               <Globe size={18} />
             </button>
             <button
+              onClick={() => setShowGlobalSettings(true)}
+              className="text-ue-text-muted hover:text-epic-cyan transition-colors p-2"
+              title="Settings"
+            >
+              <Settings size={18} />
+            </button>
+            <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="text-ue-text-muted hover:text-epic-cyan transition-colors p-2"
               title={t.themeLabel}
@@ -530,6 +540,9 @@ export default function Dashboard() {
         <span>&bull;</span>
         <span>made by hifn_w</span>
       </footer>
+    {showGlobalSettings && (
+        <GlobalSettingsModal onClose={() => setShowGlobalSettings(false)} lang={lang} />
+      )}
     </div>
   );
 }

@@ -1,32 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
   --color-ue-bg: var(--ue-bg);
   --color-ue-panel: var(--ue-panel);
   --color-ue-panel-hover: var(--ue-panel-hover);
-  --color-epic-cyan: #00E5FF;
-  --color-unreal-orange: #FF5E00;
+  --color-epic-cyan: var(--epic-cyan, #00E5FF);
+  --color-unreal-orange: var(--unreal-orange, #FF5E00);
   --color-ue-border: var(--ue-border);
   --color-ue-text: var(--ue-text);
   --color-ue-text-muted: var(--ue-text-muted);
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
 :root {
-  --ue-bg: #121212;
-  --ue-panel: #1E1E1E;
-  --ue-panel-hover: #2A2A2A;
-  --ue-border: #333333;
-  --ue-text: #E0E0E0;
-  --ue-text-muted: #909090;
+  --ue-bg: #09090b;
+  --ue-panel: #18181b;
+  --ue-panel-hover: #27272a;
+  --ue-border: #27272a;
+  --ue-text: #fafafa;
+  --ue-text-muted: #a1a1aa;
 }
 
 .uefn-light {
-  --ue-bg: #F3F4F6;
-  --ue-panel: #FFFFFF;
-  --ue-panel-hover: #E5E7EB;
-  --ue-border: #D1D5DB;
-  --ue-text: #1F2937;
-  --ue-text-muted: #6B7280;
+  --ue-bg: #fafafa;
+  --ue-panel: #ffffff;
+  --ue-panel-hover: #f4f4f5;
+  --ue-border: #e4e4e7;
+  --ue-text: #09090b;
+  --ue-text-muted: #71717a;
 }
 
 @layer base {
@@ -42,37 +45,41 @@
   width: 8px;
   height: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: var(--ue-bg);
+  background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
   background: var(--ue-border);
   border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--ue-panel-hover);
+  background: var(--ue-text-muted);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: linear-gradient(to bottom, rgba(0, 229, 255, 0.2), rgba(255, 94, 0, 0.2));
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, rgba(0, 229, 255, 0.5), rgba(255, 94, 0, 0.5));
   box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+}
+
+/* Additional Dynamic Settings Styles */
+.no-animations * {
+  transition: none !important;
+  animation: none !important;
+}
+
+.no-glass * {
+  backdrop-filter: none !important;
 }

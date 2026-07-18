@@ -11,6 +11,13 @@ Welcome to **UEFN Flow**! This is a modern, high-performance web application des
 - **Responsive Design:** Optimized for both desktop and mobile views.
 - **Localization:** Supports multiple languages out of the box.
 
+## Getting Started
+
+1. Clone the repository
+2. Run `npm install` to install dependencies
+3. Run `npm run dev` to start the development server
+4. Open the browser to view the application
+
 ## Settings & Preferences
 
 You can access the Preferences panel directly in the app to configure:

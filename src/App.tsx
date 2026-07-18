@@ -6,6 +6,8 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LanguageProvider } from './lib/LanguageContext';
+import { SettingsProvider } from './lib/SettingsContext';
+import MouseEffect from './components/MouseEffect';
 import Dashboard from './components/Dashboard';
 import ProjectView from './components/ProjectView';
 import LoadingScreen from './components/LoadingScreen';
@@ -26,6 +28,7 @@ export default function App() {
 
   return (
     <LanguageProvider>
+      <SettingsProvider>
       <Toaster 
         position="bottom-right" 
         toastOptions={{ 
@@ -36,6 +39,7 @@ export default function App() {
           } 
         }} 
       />
+      <MouseEffect />
       <Router>
       <div className="min-h-screen bg-ue-bg text-ue-text">
         <Routes>
@@ -45,6 +49,7 @@ export default function App() {
         </Routes>
       </div>
     </Router>
+    </SettingsProvider>
     </LanguageProvider>
   );
 }
