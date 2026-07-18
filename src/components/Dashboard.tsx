@@ -68,6 +68,7 @@ function calculateProjectStats(project: any) {
 }
 
 function ProjectCard({ project, onDelete, onArchive, onExport, index, lang }: any) {
+  const t = translations[lang];
   const displayStatus = project.status || (project.template && typeof project.template === 'string' ? project.template.split('-').map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : 'Blank');
   const projStats = calculateProjectStats(project);
 
@@ -108,21 +109,21 @@ function ProjectCard({ project, onDelete, onArchive, onExport, index, lang }: an
             <button 
               onClick={(e) => onExport(project, e)}
               className="p-2 bg-black/60 hover:bg-epic-cyan text-ue-text rounded-lg backdrop-blur-md transition-all hover:scale-110 border border-white/10 cursor-pointer"
-              title={lang === 'en' ? 'Export Project' : 'Projekt exportieren'}
+              title={t.exportProject}
             >
               <Download size={14} />
             </button>
             <button 
               onClick={(e) => onArchive(project.id, e)}
               className="p-2 bg-black/60 hover:bg-emerald-500 text-ue-text rounded-lg backdrop-blur-md transition-all hover:scale-110 border border-white/10 cursor-pointer"
-              title={lang === 'en' ? (project.archived ? 'Unarchive Project' : 'Archive Project') : (project.archived ? 'Projekt wiederherstellen' : 'Projekt archivieren')}
+              title={project.archived ? t.unarchiveProject : t.archiveProject}
             >
               <Archive size={14} />
             </button>
             <button 
               onClick={(e) => onDelete(project.id, e)}
               className="p-2 bg-black/60 hover:bg-unreal-orange text-ue-text rounded-lg backdrop-blur-md transition-all hover:scale-110 border border-white/10 cursor-pointer"
-              title={lang === 'en' ? 'Delete Project' : 'Projekt löschen'}
+              title={t.deleteProject}
             >
               <Trash2 size={14} />
             </button>
@@ -157,7 +158,7 @@ function ProjectCard({ project, onDelete, onArchive, onExport, index, lang }: an
             {/* Completion (Abschluss) */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-ue-text-muted font-bold">{lang === 'en' ? 'Completion' : 'Abschluss'}:</span>
+                <span className="text-ue-text-muted font-bold">{t.completion}:</span>
                 <span className="text-epic-cyan font-black">{projStats.progress}%</span>
               </div>
               <div className="w-full h-1.5 bg-ue-bg rounded-full overflow-hidden border border-ue-border/40">
@@ -175,7 +176,7 @@ function ProjectCard({ project, onDelete, onArchive, onExport, index, lang }: an
               {new Date(project.created_at!).toLocaleDateString()}
             </div>
             <div className="flex items-center gap-1 group-hover:text-epic-cyan transition-colors font-bold uppercase tracking-widest text-[10px]">
-              {lang === 'en' ? translations.en.openBtn : translations.de.openBtn} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              {t.openBtn} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         </div>
@@ -221,7 +222,7 @@ export default function Dashboard() {
       setShowImportExport(null);
     } catch (e) {
       console.error(e);
-      alert(lang === 'en' ? 'Failed to import project' : 'Import fehlgeschlagen');
+      alert(t.importFailed);
     }
   };
 
@@ -323,7 +324,7 @@ export default function Dashboard() {
       navigate(`/project/${localId}`);
     } catch (storageErr) {
       console.error('Local Storage also failed:', storageErr);
-      alert(lang === 'en' ? 'Error saving project locally' : 'Fehler beim lokalen Sichern des Projekts');
+      alert(t.localSaveError);
     }
   };
   const archiveProject = async (id: string, e: React.MouseEvent) => {
@@ -385,10 +386,10 @@ export default function Dashboard() {
             <button
               onClick={() => setShowImportExport({ mode: 'import' })}
               className="text-ue-text-muted hover:text-epic-cyan transition-colors flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded bg-ue-border/50 hover:bg-ue-border"
-              title={lang === 'en' ? 'Import Project' : 'Projekt importieren'}
+              title={t.importProject}
             >
               <Upload size={16} />
-              {lang === 'en' ? 'Import' : 'Import'}
+              {t.importBtn}
             </button>
             <button
               onClick={() => setShowArchived(!showArchived)}

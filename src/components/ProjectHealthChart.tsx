@@ -11,6 +11,7 @@ interface ProjectHealthChartProps {
 }
 
 export default function ProjectHealthChart({ projects, lang }: ProjectHealthChartProps) {
+  const t = translations[lang];
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // Helper to calculate project progress
@@ -160,11 +161,11 @@ export default function ProjectHealthChart({ projects, lang }: ProjectHealthChar
             <Activity size={18} />
           </div>
           <h3 className="font-bold text-sm uppercase tracking-wider text-ue-text">
-            {lang === 'en' ? translations.en.projectHealthTitle : translations.de.projectHealthTitle}
+            {t.projectHealthTitle}
           </h3>
         </div>
         <p className="text-xs text-ue-text-muted mb-6">
-          {lang === 'en' ? translations.en.activeProjectsStats : translations.de.activeProjectsStats}
+          {t.activeProjectsStats}
         </p>
 
         <div className="relative w-full overflow-hidden">
@@ -173,10 +174,10 @@ export default function ProjectHealthChart({ projects, lang }: ProjectHealthChar
       </div>
 
       <div className="mt-4 pt-4 border-t border-ue-border/50 flex justify-between items-center text-[10px] text-ue-text-muted uppercase tracking-wider font-bold">
-        <span>{lang === 'en' ? 'Top Active UEFN Projects' : 'Aktivste UEFN-Projekte'}</span>
+        <span>{t.topActiveProjects}</span>
         <span className="text-epic-cyan flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-epic-cyan animate-ping" />
-          {lang === 'en' ? 'Live Progress' : 'Live-Fortschritt'}
+          {t.liveProgress}
         </span>
       </div>
     </div>

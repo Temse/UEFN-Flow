@@ -58,7 +58,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
     try {
       const newTemplate = {
         id: nanoid(),
-        name: `${project.name} (${lang === "en" ? "Template" : "Vorlage"})`,
+        name: `${project.name} (${t.template})`,
         columns: project.columns,
         tasks: project.tasks,
         icon: selectedIcon
@@ -75,7 +75,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
         currentTemplates.push(newTemplate);
         localStorage.setItem("uefn-cached-templates", JSON.stringify(currentTemplates));
       }
-      alert(lang === "en" ? "Template successfully saved!" : "Vorlage erfolgreich gespeichert!");
+      alert(t.templateSaved);
     } catch (err) {
       console.error(err);
     } finally {
@@ -85,7 +85,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert(lang === 'en' ? 'Please upload images only.' : 'Bitte lade nur Bilder hoch.');
+      alert(t.uploadImageOnly);
       return;
     }
 
@@ -145,7 +145,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
           {/* Project Name */}
           <section>
             <label className="block text-xs font-bold uppercase tracking-widest text-ue-text-muted mb-2">
-              {lang === 'en' ? 'Project Name' : 'Projektname'}
+              {t.projectNameLabel}
             </label>
             <input 
               type="text" 
@@ -172,13 +172,13 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
           {/* Customizable Status */}
           <section>
             <label className="block text-xs font-bold uppercase tracking-widest text-ue-text-muted mb-2">
-              {lang === 'en' ? 'Project Status' : 'Projektstatus'}
+              {t.projectStatus}
             </label>
             <div className="grid grid-cols-4 gap-2 mb-3">
               <button
                 type="button"
                 onClick={() => {
-                  setStatus(lang === 'en' ? 'Online' : 'Online');
+                  setStatus(t.statusOnline);
                   setIsCustomMode(false);
                 }}
                 className={cn(
@@ -195,7 +195,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
               <button
                 type="button"
                 onClick={() => {
-                  setStatus(lang === 'en' ? 'Offline' : 'Offline');
+                  setStatus(t.statusOffline);
                   setIsCustomMode(false);
                 }}
                 className={cn(
@@ -212,7 +212,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
               <button
                 type="button"
                 onClick={() => {
-                  setStatus(lang === 'en' ? 'Private' : 'Privat');
+                  setStatus(t.statusPrivate);
                   setIsCustomMode(false);
                 }}
                 className={cn(
@@ -223,7 +223,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
                 )}
               >
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b]" />
-                {lang === 'en' ? 'Private' : 'Privat'}
+                {t.statusPrivate}
               </button>
 
               <button
@@ -242,7 +242,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
                 )}
               >
                 <div className="w-2.5 h-2.5 rounded-full bg-epic-cyan shadow-[0_0_8px_#00e5ff]" />
-                {lang === 'en' ? 'Custom' : 'Eigener'}
+                {t.statusCustom}
               </button>
             </div>
             {isCustomMode && (
@@ -254,7 +254,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
                   type="text" 
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  placeholder={lang === 'en' ? 'Enter custom status...' : 'Eigenen Status eingeben...'}
+                  placeholder={t.enterCustomStatus}
                   className="w-full bg-ue-bg border border-ue-border rounded-lg px-4 py-2 text-ue-text focus:border-epic-cyan outline-none transition-colors text-sm"
                 />
               </motion.div>
@@ -264,7 +264,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
           {/* Image Upload / Preview */}
           <section>
             <label className="block text-xs font-bold uppercase tracking-widest text-ue-text-muted mb-2">
-              {lang === 'en' ? 'Preview Image' : 'Vorschaubild'}
+              {t.previewImage}
             </label>
             
             <div 
@@ -300,10 +300,10 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
                   </div>
                   <div className="text-center">
                     <p className="text-xs font-bold text-ue-text">
-                      {lang === 'en' ? 'Drag image here' : 'Bild hierhin ziehen'}
+                      {t.dragImageHere}
                     </p>
                     <p className="text-[10px] text-ue-text-muted mt-1">
-                      {lang === 'en' ? 'or click to upload' : 'oder klicken zum Hochladen'}
+                      {t.orClickToUpload}
                     </p>
                   </div>
                   <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={onFileChange} />
@@ -315,10 +315,10 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
               <div className="flex-1 relative">
                 <input 
                   type="text" 
-                  value={imageUrl.startsWith('data:') ? (lang === 'en' ? 'Image uploaded' : 'Bild hochgeladen') : imageUrl}
+                  value={imageUrl.startsWith('data:') ? (t.imageUploaded) : imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   disabled={imageUrl.startsWith('data:')}
-                  placeholder={lang === 'en' ? 'Or paste an image URL...' : 'Oder Bild-URL einfügen...'}
+                  placeholder={t.orPasteImageUrl}
                   className="w-full bg-ue-bg border border-ue-border rounded-lg pl-10 pr-4 py-2 text-ue-text focus:border-epic-cyan outline-none transition-colors disabled:opacity-50"
                 />
                 <ImageIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ue-text-muted" />
@@ -331,11 +331,11 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
             <div className="flex items-center gap-2 mb-3">
               <Save size={18} className="text-unreal-orange" />
               <h3 className="font-bold text-sm uppercase tracking-wider text-ue-text">
-                {lang === 'en' ? 'Save as Template' : 'Als Vorlage speichern'}
+                {t.saveAsTemplate}
               </h3>
             </div>
             <p className="text-xs text-ue-text-muted mb-4">
-              {lang === 'en' ? 'Choose an icon and save the current project setup as a template.' : 'Wähle ein Symbol und speichere die aktuelle Struktur als Vorlage.'}
+              {t.saveTemplateDesc}
             </p>
             
             <div className="grid grid-cols-8 gap-2 mb-4">
@@ -362,7 +362,7 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
             >
               <Save size={14} />
               <span className="text-xs font-bold">
-                {isSavingTemplate ? (lang === 'en' ? 'Saving...' : 'Speichert...') : (lang === 'en' ? 'Create Template' : 'Vorlage erstellen')}
+                {isSavingTemplate ? t.savingTemplate : t.createTemplateBtn}
               </span>
             </button>
           </section>
@@ -376,19 +376,19 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
                 className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-ue-text-muted hover:text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-all cursor-pointer"
               >
                 <Archive size={16} />
-                {lang === "en" ? (project.archived ? "Unarchive" : "Archive") : (project.archived ? "Wiederherstellen" : "Archivieren")}
+                {project.archived ? t.unarchiveBtn : t.archiveBtn}
               </button>
             )}
           </div>
           <div className="flex items-center gap-3">
             <button onClick={onClose} className="px-4 py-2 text-sm font-bold text-ue-text-muted hover:text-ue-text cursor-pointer">
-              {lang === "en" ? "Cancel" : "Abbrechen"}
+              {t.cancelBtn}
             </button>
             <button 
               onClick={handleSave}
               className="px-6 py-2 bg-epic-cyan text-ue-bg font-bold rounded-lg hover:bg-white transition-colors cursor-pointer"
             >
-              {lang === "en" ? "Save" : "Speichern"}
+              {t.saveBtn}
             </button>
           </div>
         </div>

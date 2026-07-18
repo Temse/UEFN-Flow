@@ -47,7 +47,7 @@ export default function Header({
         <Link 
           to="/" 
           className="relative hover:scale-105 active:scale-95 transition-transform cursor-pointer block"
-          title={lang === 'en' ? 'Back to Dashboard' : 'Zurück zum Dashboard'}
+          title={t.backToDashboard}
         >
           <div className="w-8 h-8 bg-unreal-orange rounded flex items-center justify-center font-bold text-ue-text">
             U
@@ -94,12 +94,12 @@ export default function Header({
             {isSaving ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                <span>{lang === 'en' ? 'Saving...' : 'Speichert...'}</span>
+                <span>{t.saving}</span>
               </>
             ) : (
               <>
                 <Save size={14} />
-                <span>{lang === 'en' ? 'Save' : 'Speichern'}</span>
+                <span>{t.saveBtn}</span>
               </>
             )}
           </button>
@@ -112,10 +112,10 @@ export default function Header({
                 ? 'border-unreal-orange text-unreal-orange shadow-[0_0_15px_rgba(241,90,36,0.25)] bg-unreal-orange/10' 
                 : 'border-ue-border hover:border-unreal-orange hover:text-unreal-orange text-ue-text'
             }`}
-            title={lang === 'en' ? 'Toggle Project Notes' : 'Projektnotizen umschalten'}
+            title={t.toggleNotes}
           >
             <FileText size={14} />
-            <span>{lang === 'en' ? 'Notes' : 'Notizen'}</span>
+            <span>{t.notesBtn}</span>
           </button>
         )}
         {isProjectView && onSettings && (

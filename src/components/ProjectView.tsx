@@ -159,7 +159,7 @@ export default function ProjectView() {
         data.columns = deduplicateById(data.columns || []);
         setProject(data);
       } else {
-        throw new Error(lang === 'en' ? 'Project could not be loaded' : 'Projekt konnte nicht geladen werden');
+        throw new Error(t.projectLoadError);
       }
     } catch (e) {
       console.error('Error parsing cached project:', e);
@@ -444,17 +444,15 @@ export default function ProjectView() {
           <AlertTriangle size={32} className="text-unreal-orange" />
         </div>
         <h2 className="text-2xl font-bold text-ue-text mb-2">
-          {lang === 'en' ? 'Project Not Found' : 'Projekt nicht gefunden'}
+          {t.projectNotFound}
         </h2>
         <p className="text-ue-text-muted mb-8 max-w-md mx-auto">
-          {error || (lang === 'en' ? 'The requested project does not exist.' : 'Das angeforderte Projekt existiert nicht.')}
+          {error || t.projectNotExist}
         </p>
         <div className="bg-ue-panel/50 border border-ue-border rounded-xl p-4 mb-8 max-w-md mx-auto text-left text-sm text-ue-text-muted">
-          <p className="mb-2"><strong>{lang === 'en' ? 'Note for GitHub Pages:' : 'Hinweis für GitHub Pages:'}</strong></p>
+          <p className="mb-2"><strong>{t.noteForGithub}</strong></p>
           <p>
-            {lang === 'en' 
-              ? 'If you are using the static GitHub Pages version of this app, projects are only saved in your browser\'s local storage. Links cannot be shared across different devices because there is no backend server.' 
-              : 'Wenn du die statische GitHub Pages-Version dieser App verwendest, werden Projekte nur im lokalen Speicher deines Browsers gespeichert. Links können nicht geräteübergreifend geteilt werden, da kein Backend-Server vorhanden ist.'}
+            {t.githubNoteDesc}
           </p>
         </div>
         <Link 
@@ -576,15 +574,15 @@ export default function ProjectView() {
         )}
         <InputModal key="add-column" 
           isOpen={showAddColumn}
-          title={lang === 'en' ? 'Add New Column' : 'Neue Spalte hinzufügen'}
-          placeholder={lang === 'en' ? 'Enter column name...' : 'Spaltenname eingeben...'}
+          title={t.addNewColumn}
+          placeholder={t.enterColumnName}
           onConfirm={addColumn}
           onCancel={() => setShowAddColumn(false)}
         />
         <InputModal key="add-task" 
           isOpen={!!columnIdForNewTask}
-          title={lang === 'en' ? 'Add New Task' : 'Neue Aufgabe hinzufügen'}
-          placeholder={lang === 'en' ? 'Enter task title...' : 'Aufgabentitel eingeben...'}
+          title={t.addNewTask}
+          placeholder={t.enterTaskTitle}
           onConfirm={(title) => {
             if (columnIdForNewTask && title.trim()) {
               addTask(columnIdForNewTask, title.trim());
@@ -595,8 +593,8 @@ export default function ProjectView() {
         />
         <InputModal key="rename-column" 
           isOpen={!!columnToRename}
-          title={lang === 'en' ? 'Rename Column' : 'Spalte umbenennen'}
-          placeholder={lang === 'en' ? 'New column name...' : 'Neuer Spaltenname...'}
+          title={t.renameColumn}
+          placeholder={t.newColumnName}
           defaultValue={columnToRename?.title}
           onConfirm={(title) => {
             if (columnToRename) updateColumn(columnToRename.id, title);
@@ -606,11 +604,11 @@ export default function ProjectView() {
         />
         <ConfirmModal key="delete-column" 
           isOpen={!!columnToDelete}
-          title={lang === 'en' ? 'Delete Column' : 'Spalte löschen'}
-          message={lang === 'en' ? 'Are you sure you want to delete this column and all its tasks?' : 'Bist du sicher, dass du diese Spalte und alle darin enthaltenen Aufgaben löschen möchtest?'}
+          title={t.deleteColumnBtn}
+          message={t.deleteColumnConfirm}
           type="danger"
-          confirmText={lang === 'en' ? 'Delete' : 'Löschen'}
-          cancelText={lang === 'en' ? 'Cancel' : 'Abbrechen'}
+          confirmText={t.deleteBtn}
+          cancelText={t.cancelBtn}
           onConfirm={confirmDeleteColumn}
           onCancel={() => setColumnToDelete(null)}
         />
@@ -628,7 +626,7 @@ export default function ProjectView() {
             <div className="flex flex-col">
               <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Autosave</span>
               <span className="text-[11px] font-bold text-ue-text-muted">
-                {lang === 'en' ? 'Progress saved successfully' : 'Fortschritt erfolgreich gesichert'}
+                {t.progressSaved}
               </span>
             </div>
           </motion.div>
@@ -647,7 +645,7 @@ export default function ProjectView() {
             <div className="flex flex-col">
               <span className="text-[10px] font-black uppercase tracking-widest text-epic-cyan">Save</span>
               <span className="text-[11px] font-bold text-ue-text-muted">
-                {lang === 'en' ? 'All changes saved' : 'Alle Änderungen gespeichert'}
+                {t.allChangesSaved}
               </span>
             </div>
           </motion.div>

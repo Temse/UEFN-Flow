@@ -1,4 +1,5 @@
 import { useLanguage } from '../lib/LanguageContext';
+import { translations } from '../lib/translations';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { X, Check, Trash2, Plus, Sparkles, Clipboard, CheckCircle, Clock } from 'lucide-react';
@@ -117,15 +118,16 @@ export default function ProjectNotesPanel({ project, onUpdateNotes, onClose }: P
   };
 
   const { lang } = useLanguage();
+  const tr = translations[lang];
   const t = {
-    title: lang === 'en' ? 'Project Notes' : 'Projektnotizen',
-    desc: lang === 'en' ? 'Quick snippets and project wiki' : 'Schnelle Snippets und Projekt-Wiki',
-    placeholder: lang === 'en' ? 'Write down coordinates, ideas, island settings, or reminders...' : 'Schreibe Koordinaten, Ideen, Island-Einstellungen oder Erinnerungen auf...',
-    reminders: lang === 'en' ? 'Quick Reminders' : 'Schnelle Erinnerungen',
-    addPlaceholder: lang === 'en' ? 'Add quick reminder...' : 'Schnelle Erinnerung hinzufügen...',
-    saved: lang === 'en' ? 'Saved' : 'Gespeichert',
-    saving: lang === 'en' ? 'Saving...' : 'Speichert...',
-    noReminders: lang === 'en' ? 'No reminders yet.' : 'Noch keine Erinnerungen.',
+    title: tr.projectNotesTitle,
+    desc: tr.projectNotesDesc,
+    placeholder: tr.projectNotesPlaceholder,
+    reminders: tr.quickReminders,
+    addPlaceholder: tr.addQuickReminder,
+    saved: tr.savedStatus,
+    saving: tr.saving,
+    noReminders: tr.noReminders,
   };
 
   return (

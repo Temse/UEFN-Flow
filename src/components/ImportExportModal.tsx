@@ -28,13 +28,13 @@ export default function ImportExportModal({ mode, exportData, onImport, onClose,
   const handleImport = () => {
     try {
       if (!importData.trim()) {
-        setError(lang === 'en' ? 'Please paste project data first.' : 'Bitte füge zuerst die Projektdaten ein.');
+        setError(t.pasteProjectDataFirst);
         return;
       }
       JSON.parse(importData); // Validate JSON
       if (onImport) onImport(importData);
     } catch (e) {
-      setError(lang === 'en' ? 'Invalid JSON data. Please check the format.' : 'Ungültige JSON-Daten. Bitte Format überprüfen.');
+      setError(t.invalidJsonData);
     }
   };
 
@@ -49,7 +49,7 @@ export default function ImportExportModal({ mode, exportData, onImport, onClose,
       >
         <div className="flex items-center justify-between p-6 border-b border-white/5">
           <h2 className="text-xl font-bold">
-            {mode === 'export' ? (lang === 'en' ? 'Export Project Data' : 'Projektdaten exportieren') : (lang === 'en' ? 'Import Project Data' : 'Projektdaten importieren')}
+            {mode === 'export' ? (t.exportProjectData) : (t.importProjectData)}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-ue-text-muted hover:text-white">
             <X size={20} />
@@ -59,8 +59,8 @@ export default function ImportExportModal({ mode, exportData, onImport, onClose,
         <div className="p-6">
           <p className="text-sm text-ue-text-muted mb-4">
             {mode === 'export' 
-              ? (lang === 'en' ? 'Copy this text and save it somewhere safe. You can use it later to import the project.' : 'Kopiere diesen Text und speichere ihn sicher. Du kannst ihn später verwenden, um das Projekt zu importieren.')
-              : (lang === 'en' ? 'Paste the project data text here to import it.' : 'Füge den Projektdaten-Text hier ein, um es zu importieren.')}
+              ? (t.copyExportText)
+              : (t.pasteImportText)}
           </p>
 
           {mode === 'export' ? (
@@ -98,7 +98,7 @@ export default function ImportExportModal({ mode, exportData, onImport, onClose,
               className="bg-epic-cyan hover:bg-[#00c9e0] text-black px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition-all hover:scale-105"
             >
               {copied ? <Check size={18} /> : <Copy size={18} />}
-              {copied ? (lang === 'en' ? 'Copied!' : 'Kopiert!') : (lang === 'en' ? 'Copy to Clipboard' : 'In Zwischenablage kopieren')}
+              {copied ? (t.copied) : (t.copyToClipboard)}
             </button>
           ) : (
             <button 
@@ -106,7 +106,7 @@ export default function ImportExportModal({ mode, exportData, onImport, onClose,
               className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition-all hover:scale-105"
             >
               <Save size={18} />
-              {lang === 'en' ? 'Import Project' : 'Projekt importieren'}
+              {t.importProject}
             </button>
           )}
         </div>
