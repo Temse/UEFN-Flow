@@ -64,12 +64,10 @@ export default function ProjectSettingsModal({ project, onClose, onUpdate, onArc
         icon: selectedIcon
       };
       try {
-        const response = await fetch("/api/templates", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newTemplate)
-        });
-        if (!response.ok) throw new Error("Backend error");
+        const cached = localStorage.getItem("uefn-custom-templates");
+        const existing = cached ? JSON.parse(cached) : [];
+        const newTemplates = [...existing, newTemplate];
+        localStorage.setItem("uefn-custom-templates", JSON.stringify(newTemplates));
       } catch (backendErr) {
         console.warn("Template backend save failed, using local fallback", backendErr);
         const currentTemplatesStr = localStorage.getItem("uefn-cached-templates");

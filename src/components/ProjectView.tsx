@@ -90,11 +90,6 @@ export default function ProjectView() {
       }
     } catch (e) {}
     try {
-      await fetch(`/api/projects/${project.id}/archive`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ archived: newArchivedState })
-      });
     } catch (e) {}
   };
 
@@ -154,135 +149,26 @@ export default function ProjectView() {
     }
     setError(null);
 
-    // Fetch initial data
-    fetch(`/api/projects/${projectId}`)
-      .then(async res => {
-        const contentType = res.headers.get('content-type');
-        if (!res.ok) {
-          const data = contentType?.includes('application/json') ? await res.json() : null;
-          throw new Error(data?.error || (lang === 'en' ? 'Project could not be loaded' : 'Projekt konnte nicht geladen werden'));
-        }
-        if (!contentType?.includes('application/json')) {
-          throw new Error(lang === 'en' ? 'Server returned invalid JSON' : 'Server hat kein JSON zurückgegeben');
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (data) {
-          data.tasks = deduplicateById(data.tasks || []);
-          data.columns = deduplicateById(data.columns || []);
-        }
+    // Fetch initial data completely locally
+    setError(null);
+    try {
+      const cached = localStorage.getItem(`uefn-cached-project-${projectId}`);
+      if (cached) {
+        const data = JSON.parse(cached);
+        data.tasks = deduplicateById(data.tasks || []);
+        data.columns = deduplicateById(data.columns || []);
         setProject(data);
-        localStorage.setItem(`uefn-cached-project-${projectId}`, JSON.stringify(data));
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching project from backend:', err);
-        // Try fallback to local storage
-        try {
-          const cached = localStorage.getItem(`uefn-cached-project-${projectId}`);
-          if (cached) {
-            const data = JSON.parse(cached);
-            setProject(data);
-            setIsLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.error('Error parsing cached project:', e);
-        }
-        setError(err.message);
-        setIsLoading(false);
-      });
+      } else {
+        throw new Error(lang === 'en' ? 'Project could not be loaded' : 'Projekt konnte nicht geladen werden');
+      }
+    } catch (e) {
+      console.error('Error parsing cached project:', e);
+      setError((e as Error).message);
+    }
+    setIsLoading(false);
 
-    // Establish WebSocket Connection
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const newSocket = io(`${protocol}//${window.location.host}`, {
-      transports: ['websocket'],
-      upgrade: false
-    });
-
-    setSocket(newSocket);
-
-    newSocket.on('connect', () => {
-      newSocket.emit('join-project', projectId);
-    });
-
-    newSocket.on('task-moved', ({ taskId, newColumnId, newPosition }: any) => {
-      setProject(prev => {
-        if (!prev) return prev;
-        const tasks = prev.tasks || [];
-        const taskIdx = tasks.findIndex(t => t.id === taskId);
-        if (taskIdx === -1) return prev;
-
-        const updatedTasks = [...tasks];
-        updatedTasks[taskIdx] = { ...updatedTasks[taskIdx], columnId: newColumnId };
-
-        const movedTasks = arrayMove(updatedTasks, taskIdx, newPosition);
-        return { ...prev, tasks: movedTasks };
-      });
-    });
-
-    newSocket.on('task-added', (task: Task) => {
-      setProject(prev => {
-        if (!prev) return prev;
-        if (prev.tasks?.some(t => t.id === task.id)) return prev;
-        return { ...prev, tasks: [...(prev.tasks || []), task] };
-      });
-    });
-
-    newSocket.on('task-updated', (updatedTask: Task) => {
-      setProject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          tasks: prev.tasks?.map(t => t.id === updatedTask.id ? updatedTask : t)
-        };
-      });
-    });
-
-    newSocket.on('task-deleted', (taskId: string) => {
-      setProject(prev => {
-        if (!prev) return prev;
-        return { ...prev, tasks: prev.tasks?.filter(t => t.id !== taskId) };
-      });
-    });
-
-    newSocket.on('column-added', (column: Column) => {
-      setProject(prev => {
-        if (!prev) return prev;
-        if (prev.columns?.some(c => c.id === column.id)) return prev;
-        return { ...prev, columns: [...(prev.columns || []), column] };
-      });
-    });
-
-    newSocket.on('column-updated', (updatedColumn: Column) => {
-      setProject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          columns: prev.columns?.map(c => c.id === updatedColumn.id ? updatedColumn : c)
-        };
-      });
-    });
-
-    newSocket.on('column-deleted', (columnId: string) => {
-      setProject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          columns: prev.columns?.filter(c => c.id !== columnId),
-          tasks: prev.tasks?.filter(t => t.columnId !== columnId)
-        };
-      });
-    });
-
-    newSocket.on('project-updated', ({ name, imageUrl, islandCode, status, notes }: any) => {
-      setProject(prev => prev ? { ...prev, name, image_url: imageUrl, island_code: islandCode, status, notes } : prev);
-    });
-
-    return () => {
-      newSocket.disconnect();
-    };
+    // No WebSocket Connection for fully local mode
+    return () => {};
   }, [projectId, navigate]);
 
   // Local storage sync mechanism to automatically save task states and the entire project state whenever modified
@@ -371,11 +257,6 @@ export default function ProjectView() {
       
       // Persist column positions
       updatedColumns.forEach((col: Column, idx: number) => {
-        fetch(`/api/columns/${col.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ position: idx })
-        }).catch(() => {});
       });
       return;
     }
@@ -436,11 +317,6 @@ export default function ProjectView() {
 
   const logAction = async (action: string, details: string) => {
     try {
-      await fetch(`/api/projects/${projectId}/logs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userEmail: userEmail, action, details })
-      });
     } catch (err) {
       console.error('Error logging action:', err);
     }
@@ -475,31 +351,11 @@ export default function ProjectView() {
       tips: [],
       notes: ''
     };
-
     setProject(prev => {
       if (!prev) return prev;
       return { ...prev, tasks: [...(prev.tasks || []), newTask] };
     });
-
-    try {
-      const res = await fetch(`/api/tasks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: newTaskId,
-          projectId,
-          columnId,
-          title,
-          description: '',
-          notes: ''
-        })
-      });
-      const savedTask = await res.json();
-      socket?.emit('task-added', { projectId, task: savedTask });
-      logAction('task_created', `Aufgabe "${title}" erstellt.`);
-    } catch (err) {
-      console.error('Error adding task:', err);
-    }
+    logAction('task_created', `Aufgabe "${title}" erstellt.`);
   };
 
   const deleteTask = async (taskId: string) => {
@@ -508,16 +364,8 @@ export default function ProjectView() {
       if (!prev) return prev;
       return { ...prev, tasks: prev.tasks?.filter(t => t.id !== taskId) };
     });
-
-    try {
-      await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
-      socket?.emit('task-deleted', { projectId, taskId });
-      if (task) logAction('task_deleted', `Aufgabe "${task.title}" gelöscht.`);
-    } catch (err) {
-      console.error('Error deleting task:', err);
-    } finally {
-      setSelectedTaskId(null);
-    }
+    if (task) logAction('task_deleted', `Aufgabe "${task.title}" gelöscht.`);
+    setSelectedTaskId(null);
   };
 
   const addColumn = async (title: string) => {
@@ -527,30 +375,12 @@ export default function ProjectView() {
       title,
       position: project?.columns?.length || 0
     };
-
     setProject(prev => {
       if (!prev) return prev;
       return { ...prev, columns: [...(prev.columns || []), newCol] };
     });
-
-    try {
-      await fetch(`/api/columns`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: colId,
-          projectId,
-          title,
-          position: project?.columns?.length || 0
-        })
-      });
-      socket?.emit('column-added', { projectId, column: newCol });
-      logAction('column_created', `Spalte "${title}" erstellt.`);
-    } catch (err) {
-      console.error('Error adding column:', err);
-    } finally {
-      setShowAddColumn(false);
-    }
+    logAction('column_created', `Spalte "${title}" erstellt.`);
+    setShowAddColumn(false);
   };
 
   const updateColumn = async (columnId: string, title: string) => {
@@ -561,18 +391,7 @@ export default function ProjectView() {
         columns: prev.columns?.map(c => c.id === columnId ? { ...c, title } : c)
       };
     });
-
-    try {
-      await fetch(`/api/columns/${columnId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title })
-      });
-      socket?.emit('column-updated', { projectId, column: { id: columnId, title } });
-      logAction('column_renamed', `Spalte umbenannt in "${title}".`);
-    } catch (err) {
-      console.error('Error updating column:', err);
-    }
+    logAction('column_renamed', `Spalte umbenannt in "${title}".`);
   };
 
   const deleteColumn = (columnId: string) => {
@@ -584,7 +403,7 @@ export default function ProjectView() {
     const columnId = columnToDelete;
     const col = project?.columns?.find(c => c.id === columnId);
     if (!col) return;
-
+    
     setProject(prev => {
       if (!prev) return prev;
       return {
@@ -593,18 +412,8 @@ export default function ProjectView() {
         tasks: prev.tasks?.filter(t => t.columnId !== columnId)
       };
     });
-
-    try {
-      await fetch(`/api/columns/${columnId}`, { method: 'DELETE' });
-      socket?.emit('column-deleted', { projectId, columnId });
-      logAction('column_deleted', `Spalte "${col.title}" gelöscht.`);
-    } catch (err) {
-      console.error('Error deleting column:', err);
-    } finally {
-      setColumnToDelete(null);
-    }
+    setColumnToDelete(null);
   };
-
   const updateProject = (name: string, imageUrl: string, islandCode: string, status: string) => {
     const oldName = project?.name;
     const oldStatus = project?.status;
@@ -637,9 +446,17 @@ export default function ProjectView() {
         <h2 className="text-2xl font-bold text-ue-text mb-2">
           {lang === 'en' ? 'Project Not Found' : 'Projekt nicht gefunden'}
         </h2>
-        <p className="text-ue-text-muted mb-8 max-w-md">
+        <p className="text-ue-text-muted mb-8 max-w-md mx-auto">
           {error || (lang === 'en' ? 'The requested project does not exist.' : 'Das angeforderte Projekt existiert nicht.')}
         </p>
+        <div className="bg-ue-panel/50 border border-ue-border rounded-xl p-4 mb-8 max-w-md mx-auto text-left text-sm text-ue-text-muted">
+          <p className="mb-2"><strong>{lang === 'en' ? 'Note for GitHub Pages:' : 'Hinweis für GitHub Pages:'}</strong></p>
+          <p>
+            {lang === 'en' 
+              ? 'If you are using the static GitHub Pages version of this app, projects are only saved in your browser\'s local storage. Links cannot be shared across different devices because there is no backend server.' 
+              : 'Wenn du die statische GitHub Pages-Version dieser App verwendest, werden Projekte nur im lokalen Speicher deines Browsers gespeichert. Links können nicht geräteübergreifend geteilt werden, da kein Backend-Server vorhanden ist.'}
+          </p>
+        </div>
         <Link 
           to="/" 
           className="flex items-center gap-2 px-6 py-3 bg-ue-panel border border-ue-border hover:border-epic-cyan text-ue-text rounded-xl transition-all font-bold"

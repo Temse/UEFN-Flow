@@ -1,0 +1,22 @@
+  const fetchTemplates = () => {
+    try {
+      const cached = localStorage.getItem("uefn-custom-templates");
+      if (cached) setCustomTemplates(JSON.parse(cached));
+    } catch(e) {}
+  };
+
+  const deleteCustomTemplate = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const cachedStr = localStorage.getItem("uefn-custom-templates");
+      if (cachedStr) {
+         let cached = JSON.parse(cachedStr);
+         cached = cached.filter((t: any) => t.id !== id);
+         localStorage.setItem("uefn-custom-templates", JSON.stringify(cached));
+      }
+      fetchTemplates();
+      if (selectedCustomId === id) setSelectedCustomId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };

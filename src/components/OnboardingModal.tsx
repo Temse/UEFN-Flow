@@ -54,34 +54,20 @@ export default function OnboardingModal({ onComplete, onCancel }: OnboardingModa
   }, [selectedCustomId]);
 
   const fetchTemplates = () => {
-    fetch("/api/templates")
-      .then(res => {
-         if (!res.ok) throw new Error("Backend error");
-         return res.json();
-      })
-      .then(data => setCustomTemplates(data))
-      .catch(err => {
-         console.error("Fallback to local templates:", err);
-         const cached = localStorage.getItem("uefn-cached-templates");
-         if (cached) setCustomTemplates(JSON.parse(cached));
-         else setCustomTemplates([]);
-      });
+    try {
+      const cached = localStorage.getItem("uefn-custom-templates");
+      if (cached) setCustomTemplates(JSON.parse(cached));
+    } catch(e) {}
   };
 
-  const deleteTemplate = async (id: string, e: React.MouseEvent) => {
+  const deleteCustomTemplate = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm('Vorlage wirklich löschen?')) return;
-    
     try {
-      try {
-        await fetch(`/api/templates/${id}`, { method: "DELETE" });
-      } catch(backendErr) {
-        const cachedStr = localStorage.getItem("uefn-cached-templates");
-        if (cachedStr) {
-           let cached = JSON.parse(cachedStr);
-           cached = cached.filter((t: any) => t.id !== id);
-           localStorage.setItem("uefn-cached-templates", JSON.stringify(cached));
-        }
+      const cachedStr = localStorage.getItem("uefn-custom-templates");
+      if (cachedStr) {
+         let cached = JSON.parse(cachedStr);
+         cached = cached.filter((t: any) => t.id !== id);
+         localStorage.setItem("uefn-custom-templates", JSON.stringify(cached));
       }
       fetchTemplates();
       if (selectedCustomId === id) setSelectedCustomId(null);
@@ -89,7 +75,6 @@ export default function OnboardingModal({ onComplete, onCancel }: OnboardingModa
       console.error(err);
     }
   };
-
   const templates = [
     { id: 'blank' as ProjectTemplate, title: 'Blank Slate', description: 'Standard Workflow.', icon: Layout, color: 'text-ue-text-muted' },
     { id: 'zone-wars' as ProjectTemplate, title: 'Zone Wars', description: 'Storm & Loadouts.', icon: Zap, color: 'text-epic-cyan' },
@@ -249,7 +234,7 @@ export default function OnboardingModal({ onComplete, onCancel }: OnboardingModa
                     )}
                     <button 
                       type="button"
-                      onClick={(e) => deleteTemplate(t.id, e)}
+                      onClick={(e) => deleteCustomTemplate(t.id, e)}
                       className="absolute top-2 right-2 p-1 bg-black/40 hover:bg-red-500 text-ue-text rounded opacity-0 group-hover:opacity-100 transition-all z-10 cursor-pointer"
                     >
                       <X size={12} />

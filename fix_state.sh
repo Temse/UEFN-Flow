@@ -1,0 +1,26 @@
+cat << 'INNER_EOF' > state.txt
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState<Project[]>(() => {
+    try {
+      const cached = localStorage.getItem('uefn-cached-projects');
+      return cached ? deduplicateById(JSON.parse(cached)) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('uefn-cached-projects');
+      return cached ? false : true;
+    } catch (e) {
+      return true;
+    }
+  });
+INNER_EOF
+
+sed -i -e '/export default function Dashboard() {/,/return cached ? false : true;/c\
+'"$(cat state.txt | sed 's/$/\\/')"'' src/components/Dashboard.tsx
+sed -i -e 's/\\$//' src/components/Dashboard.tsx

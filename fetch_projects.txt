@@ -1,0 +1,15 @@
+  const fetchProjects = async () => {
+    try {
+      const cached = localStorage.getItem('uefn-cached-projects');
+      if (cached) {
+        setProjects(deduplicateById(JSON.parse(cached)));
+      } else {
+        setProjects([]);
+      }
+    } catch (cacheErr) {
+      console.error('Error loading cached projects:', cacheErr);
+      setProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };

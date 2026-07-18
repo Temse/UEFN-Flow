@@ -1,0 +1,4 @@
+        const cached = localStorage.getItem("uefn-custom-templates");
+        const existing = cached ? JSON.parse(cached) : [];
+        const newTemplates = [...existing, payload];
+        localStorage.setItem("uefn-custom-templates", JSON.stringify(newTemplates));

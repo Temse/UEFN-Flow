@@ -1,0 +1,65 @@
+  const confirmDeleteProject = async () => {
+    if (!projectToDelete) return;
+    const id = projectToDelete;
+    setProjects(prev => prev.filter(p => p.id !== id));
+    try {
+      localStorage.removeItem(`uefn-cached-project-${id}`);
+      localStorage.removeItem(`uefn-tasks-sync-${id}`);
+      localStorage.removeItem(`uefn-show-notes-${id}`);
+      const cachedListStr = localStorage.getItem('uefn-cached-projects');
+      if (cachedListStr) {
+        const list = JSON.parse(cachedListStr) as Project[];
+        const updatedList = list.filter(p => p.id !== id);
+        localStorage.setItem('uefn-cached-projects', JSON.stringify(updatedList));
+      }
+    } catch (e) {
+      console.error('Error cleaning up local storage on delete:', e);
+    } finally {
+      setProjectToDelete(null);
+    }
+  };
+
+  const handleExportBackup = () => {
+    try {
+      const backupData = JSON.stringify(projects, null, 2);
+      const blob = new Blob([backupData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `uefn-flow-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Error exporting backup:', e);
+    }
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const jsonData = JSON.parse(text);
+      let importedProjects = [];
+      if (Array.isArray(jsonData)) importedProjects = jsonData;
+      else if (jsonData.projects) importedProjects = jsonData.projects;
+      else throw new Error("Invalid JSON format");
+      
+      const currentListStr = localStorage.getItem("uefn-cached-projects");
+      let currentList = currentListStr ? JSON.parse(currentListStr) : [];
+      const combined = deduplicateById([...currentList, ...importedProjects]);
+      localStorage.setItem("uefn-cached-projects", JSON.stringify(combined));
+      importedProjects.forEach((p: any) => {
+        localStorage.setItem(`uefn-cached-project-${p.id}`, JSON.stringify(p));
+        if (p.tasks) localStorage.setItem(`uefn-tasks-sync-${p.id}`, JSON.stringify(p.tasks));
+      });
+      alert(lang === "en" ? "Projects successfully imported!" : "Projekte erfolgreich importiert!");
+      fetchProjects();
+      setLastSaveTime(new Date().toLocaleTimeString());
+    } catch (err) {
+      alert((lang === "en" ? "Error importing file: " : "Fehler beim Importieren der Datei: ") + (err as Error).message);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
