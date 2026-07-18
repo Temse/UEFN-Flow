@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Image as ImageIcon, Upload, Trash2, Save, Layout, Zap, DollarSign, Shield, Sword, Ghost, Car, Target, Users, Flag, Gamepad2, EyeOff, Mountain, ArrowUp, Palette, FileText } from 'lucide-react';
+import { X, Image as ImageIcon, Upload, Trash2, Save, Layout, Zap, DollarSign, Shield, Sword, Ghost, Car, Target, Users, Flag, Gamepad2, EyeOff, Mountain, ArrowUp, Palette, FileText  , Archive } from 'lucide-react';
 import { Project } from '../types';
 import { cn } from '../lib/utils';
 import { nanoid } from 'nanoid';

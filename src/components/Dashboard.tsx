@@ -776,12 +776,34 @@ export default function Dashboard() {
               
               {/* Language selection also visible when no projects exist */}
               <div className="flex justify-center gap-4 mb-6 relative z-10">
-                <button onClick={() => setLang('de')} className={`text-xs px-2.5 py-1 rounded border ${lang === 'de' ? 'border-epic-cyan text-epic-cyan bg-epic-cyan/5' : 'border-ue-border text-ue-text-muted'} font-bold`}>DE</button>
-                <div className="w-px h-5 bg-ue-border" />
-                <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="text-xs px-2.5 py-1 rounded border border-ue-border text-ue-text-muted font-bold flex items-center gap-1">
-                  {theme === 'dark' ? <Moon size={10} /> : <Sun size={10} />}
-                  {theme === 'dark' ? 'Dark' : 'Light'}
-                </button>
+                <div className="flex items-center p-1 bg-black/20 border border-ue-border rounded-xl">
+                  <button
+                    onClick={() => setLang('en')}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${lang === 'en' ? 'bg-epic-cyan text-ue-bg shadow-sm' : 'text-ue-text-muted hover:text-ue-text'}`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => setLang('de')}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${lang === 'de' ? 'bg-epic-cyan text-ue-bg shadow-sm' : 'text-ue-text-muted hover:text-ue-text'}`}
+                  >
+                    DE
+                  </button>
+                </div>
+                <div className="flex items-center p-1 bg-black/20 border border-ue-border rounded-xl">
+                  <button
+                    onClick={() => setTheme('light')}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2 ${theme === 'light' ? 'bg-epic-cyan text-ue-bg shadow-sm' : 'text-ue-text-muted hover:text-ue-text'}`}
+                  >
+                    <Sun size={12} /> Light
+                  </button>
+                  <button
+                    onClick={() => setTheme('dark')}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2 ${theme === 'dark' ? 'bg-epic-cyan text-ue-bg shadow-sm' : 'text-ue-text-muted hover:text-ue-text'}`}
+                  >
+                    <Moon size={12} /> Dark
+                  </button>
+                </div>
               </div>
 
               <button 

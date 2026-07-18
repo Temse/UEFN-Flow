@@ -398,7 +398,7 @@ export default function ProjectView() {
           taskId: activeId, 
           newColumnId, 
           newPosition: overIndex 
-        }).catch(() => {});
+        });
       } else {
         const updatedTasks = arrayMove(project.tasks!, activeIndex, overIndex);
         setProject({ ...project, tasks: updatedTasks });
@@ -407,7 +407,7 @@ export default function ProjectView() {
           taskId: activeId, 
           newColumnId, 
           newPosition: overIndex 
-        }).catch(() => {});
+        });
       }
     }
 
@@ -427,7 +427,7 @@ export default function ProjectView() {
           taskId: activeId, 
           newColumnId: overId, 
           newPosition: 0 
-        }).catch(() => {});
+        });
       }
     }
   };
@@ -726,7 +726,7 @@ export default function ProjectView() {
                   islandCode: project.island_code, 
                   status: project.status,
                   notes: newNotes
-                }).catch(() => {});
+                });
               }}
               onClose={() => {
                 setShowNotes(false);
